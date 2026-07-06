@@ -1,14 +1,32 @@
 {
-  "US": [
-    {"symbol": "NVDA", "qty": 10, "avg_price": 145},
-    {"symbol": "PLTR", "qty": 8, "avg_price": 35},
-    {"symbol": "VOO", "qty": 5, "avg_price": 400}
-  ],
-  "India": [
-    {"symbol": "TRENT.NS", "qty": 5, "avg_price": 2780},
-    {"symbol": "HDFCBANK.NS", "qty": 12, "avg_price": 1500}
-  ],
-  "Crypto": [
-    {"symbol": "BTC-USD", "qty": 0.02, "avg_price": 35000}
-  ]
+    "US": [
+        {
+            "symbol": "NVDA",
+            "name": "NVIDIA",
+            "qty": 2,
+            "avg_price": 145
+        },
+        {
+            "symbol": "PLTR",
+            "name": "Palantir",
+            "qty": 5,
+            "avg_price": 35
+        }
+    ],
+    "India": [
+        {
+            "symbol": "TRENT.NS",
+            "name": "Trent",
+            "qty": 5,
+            "avg_price": 2780
+        }
+    ],
+    "Crypto": [
+        {
+            "symbol": "BTC-USD",
+            "name": "Bitcoin",
+            "qty": 0.02,
+            "avg_price": 35000
+        }
+    ]
 }
