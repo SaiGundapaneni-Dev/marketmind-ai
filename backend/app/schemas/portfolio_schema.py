@@ -1,5 +1,16 @@
-from pydantic import BaseModel
 from typing import List
+
+from pydantic import BaseModel, Field
+
+
+class HoldingCreate(BaseModel):
+    asset_type: str
+    symbol: str
+    name: str
+    quantity: float = Field(gt=0)
+    average_price: float = Field(gt=0)
+    currency: str
+    portfolio_id: int
 
 
 class HoldingResponse(BaseModel):

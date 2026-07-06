@@ -5,6 +5,13 @@ from app.services.price_service import PriceService
 
 
 class PortfolioService:
+    
+    @staticmethod
+    def create_holding(db: Session, holding_data):
+        return PortfolioRepository.create_holding(
+            db,
+            holding_data
+        )
 
     @staticmethod
     def calculate(db: Session):
