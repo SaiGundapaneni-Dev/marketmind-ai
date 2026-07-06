@@ -22,10 +22,22 @@ class PortfolioService:
         for asset_type, assets in portfolio.items():
 
             for asset in assets:
-
+                    
                 current_price = PriceService.get_live_price(asset["symbol"])
 
                 if current_price is None:
+                    holdings.append({
+                        "asset_type": asset_type,
+                        "symbol": asset["symbol"],
+                        "name": asset.get("name", asset["symbol"]),
+                        "quantity": asset["qty"],
+                        "average_price": round(asset["avg_price"], 2),
+                        "current_price": 0,
+                        "cost": round(asset["qty"] * asset["avg_price"], 2),
+                        "current_value": 0,
+                        "profit": 0,
+                        "profit_percent": 0
+                    })
                     continue
 
                 cost = asset["qty"] * asset["avg_price"]
