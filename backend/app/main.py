@@ -1,14 +1,25 @@
 from fastapi import FastAPI
+
 from app.api.portfolio import router as portfolio_router
 from app.core.config import settings
+from app.core.exceptions import global_exception_handler
 from app.core.logger import setup_logger
 
+
 logger = setup_logger()
+
 
 app = FastAPI(
     title=settings.app_name,
     version=settings.app_version
 )
+
+
+app.add_exception_handler(
+    Exception,
+    global_exception_handler
+)
+
 
 app.include_router(portfolio_router)
 
@@ -18,6 +29,10 @@ def home():
     logger.info("Root endpoint called")
 
     return {
-        "message": f"Welcome to {settings.app_name} 🚀",
+        "message": f"Welcome to {settings.app_name}",
         "environment": settings.environment
     }
+    
+@app.get("/test-error")
+def test_error():
+    raise ValueError("Intentional test error")
