@@ -30,6 +30,16 @@ class StockService:
                 "currency": info.get("currency"),
                 "website": info.get("website"),
                 "summary": info.get("longBusinessSummary"),
+                
+                "pe_ratio": info.get("trailingPE"),
+                "forward_pe": info.get("forwardPE"),
+                "eps": info.get("trailingEps"),
+                "profit_margin": info.get("profitMargins"),
+                "revenue_growth": info.get("revenueGrowth"),
+                "fifty_two_week_high": info.get("fiftyTwoWeekHigh"),
+                "fifty_two_week_low": info.get("fiftyTwoWeekLow"),
+                "analyst_target_price": info.get("targetMeanPrice"),
+                "recommendation": info.get("recommendationKey"),
             }
 
         except Exception:
