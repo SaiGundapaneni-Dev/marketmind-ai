@@ -1,5 +1,6 @@
 import Sidebar from "@/components/Sidebar";
 import SummaryCard from "@/components/SummaryCard";
+import AllocationChart from "@/components/AllocationChart";
 import AddHoldingForm from "@/components/AddHoldingForm";
 import HoldingsTable, { Holding } from "@/components/HoldingsTable";
 
@@ -89,6 +90,7 @@ export default async function Home() {
             />
           </div>
 		<AddHoldingForm />
+		<AllocationChart holdings={portfolio.holdings} />
           <HoldingsTable holdings={portfolio.holdings} />
         </div>
       </section>
