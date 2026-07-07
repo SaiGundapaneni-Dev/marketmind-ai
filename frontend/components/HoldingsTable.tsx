@@ -32,6 +32,7 @@ export default function HoldingsTable({
   holdings: Holding[];
 }) {
   const router = useRouter();
+
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [message, setMessage] = useState("");
 
@@ -61,10 +62,14 @@ export default function HoldingsTable({
       }
 
       setMessage(`${holding.symbol} deleted successfully.`);
+
       router.refresh();
     } catch (error) {
       console.error("Delete holding error:", error);
-      setMessage("Unable to connect to MarketMind API.");
+
+      setMessage(
+        "Unable to connect to the MarketMind API."
+      );
     } finally {
       setDeletingId(null);
     }
@@ -72,11 +77,17 @@ export default function HoldingsTable({
 
   return (
     <div className="mt-8 rounded-2xl border border-slate-800 bg-slate-900 p-5">
-      <h2 className="text-xl font-semibold">Holdings</h2>
+
+      <h2 className="text-xl font-semibold">
+        Holdings
+      </h2>
 
       <p className="mt-1 text-sm text-slate-400">
         Live portfolio holdings from the MarketMind API.
       </p>
+
+
+      {/* Status Message */}
 
       {message && (
         <p className="mt-4 text-sm text-slate-300">
@@ -84,81 +95,169 @@ export default function HoldingsTable({
         </p>
       )}
 
-      <div className="mt-5 overflow-x-auto">
-        <table className="w-full min-w-[1000px] text-left text-sm">
-          <thead className="border-b border-slate-800 text-slate-400">
-            <tr>
-              <th className="py-3 pr-4">Symbol</th>
-              <th className="py-3 pr-4">Name</th>
-              <th className="py-3 pr-4">Asset</th>
-              <th className="py-3 pr-4">Qty</th>
-              <th className="py-3 pr-4">Avg Price</th>
-              <th className="py-3 pr-4">Current Price</th>
-              <th className="py-3 pr-4">Current Value</th>
-              <th className="py-3 pr-4">P/L</th>
-              <th className="py-3 pr-4">P/L %</th>
-              <th className="py-3">Actions</th>
-            </tr>
-          </thead>
 
-          <tbody>
-            {holdings.map((holding) => (
-              <tr
-                key={holding.id}
-                className="border-b border-slate-800 last:border-0"
-              >
-                <td className="py-4 pr-4 font-semibold">
-                  {holding.symbol}
-                </td>
+      {/* Empty Portfolio State */}
 
-                <td className="py-4 pr-4">
-                  {holding.name}
-                </td>
+      {holdings.length === 0 && (
+        <div className="mt-5 rounded-xl border border-slate-800 bg-slate-950 p-6 text-center">
 
-                <td className="py-4 pr-4">
-                  {holding.asset_type}
-                </td>
+          <h3 className="font-semibold text-white">
+            Your portfolio is empty
+          </h3>
 
-                <td className="py-4 pr-4">
-                  {holding.quantity}
-                </td>
+          <p className="mt-2 text-sm text-slate-400">
+            Add your first US stock using the Add Holding form above.
+          </p>
 
-                <td className="py-4 pr-4">
-                  {formatMoney(holding.average_price)}
-                </td>
+        </div>
+      )}
 
-                <td className="py-4 pr-4">
-                  {formatMoney(holding.current_price)}
-                </td>
 
-                <td className="py-4 pr-4">
-                  {formatMoney(holding.current_value)}
-                </td>
+      {/* Holdings Table */}
 
-                <td className="py-4 pr-4">
-                  {formatMoney(holding.profit)}
-                </td>
+      {holdings.length > 0 && (
 
-                <td className="py-4 pr-4">
-                  {holding.profit_percent.toFixed(2)}%
-                </td>
+        <div className="mt-5 overflow-x-auto">
 
-                <td className="py-4">
-                  <button
-                    onClick={() => deleteHolding(holding)}
-                    disabled={deletingId === holding.id}
-                    className="rounded-lg border border-red-500/30 px-3 py-2 text-red-400 transition hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {deletingId === holding.id
-                      ? "Deleting..."
-                      : "Delete"}
-                  </button>
-                </td>
+          <table className="w-full min-w-[1000px] text-left text-sm">
+
+            <thead className="border-b border-slate-800 text-slate-400">
+
+              <tr>
+
+                <th className="py-3 pr-4">
+                  Symbol
+                </th>
+
+                <th className="py-3 pr-4">
+                  Name
+                </th>
+
+                <th className="py-3 pr-4">
+                  Asset
+                </th>
+
+                <th className="py-3 pr-4">
+                  Qty
+                </th>
+
+                <th className="py-3 pr-4">
+                  Avg Price
+                </th>
+
+                <th className="py-3 pr-4">
+                  Current Price
+                </th>
+
+                <th className="py-3 pr-4">
+                  Current Value
+                </th>
+
+                <th className="py-3 pr-4">
+                  P/L
+                </th>
+
+                <th className="py-3 pr-4">
+                  P/L %
+                </th>
+
+                <th className="py-3">
+                  Actions
+                </th>
+
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+
+            </thead>
+
+
+            <tbody>
+
+              {holdings.map((holding) => (
+
+                <tr
+                  key={holding.id}
+                  className="border-b border-slate-800 last:border-0"
+                >
+
+                  <td className="py-4 pr-4 font-semibold">
+                    {holding.symbol}
+                  </td>
+
+                  <td className="py-4 pr-4">
+                    {holding.name}
+                  </td>
+
+                  <td className="py-4 pr-4">
+                    {holding.asset_type}
+                  </td>
+
+                  <td className="py-4 pr-4">
+                    {holding.quantity}
+                  </td>
+
+                  <td className="py-4 pr-4">
+                    {formatMoney(
+                      holding.average_price
+                    )}
+                  </td>
+
+                  <td className="py-4 pr-4">
+                    {formatMoney(
+                      holding.current_price
+                    )}
+                  </td>
+
+                  <td className="py-4 pr-4">
+                    {formatMoney(
+                      holding.current_value
+                    )}
+                  </td>
+
+                  <td className="py-4 pr-4">
+                    {formatMoney(
+                      holding.profit
+                    )}
+                  </td>
+
+                  <td className="py-4 pr-4">
+                    {holding.profit_percent.toFixed(2)}%
+                  </td>
+
+
+                  {/* Delete Action */}
+
+                  <td className="py-4">
+
+                    <button
+                      onClick={() =>
+                        deleteHolding(holding)
+                      }
+                      disabled={
+                        deletingId === holding.id
+                      }
+                      className="rounded-lg border border-red-500/30 px-3 py-2 text-red-400 transition hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+
+                      {deletingId === holding.id
+                        ? "Deleting..."
+                        : "Delete"}
+
+                    </button>
+
+                  </td>
+
+                </tr>
+
+              ))}
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      )}
+
     </div>
   );
 }
