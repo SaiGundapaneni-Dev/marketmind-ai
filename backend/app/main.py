@@ -1,5 +1,6 @@
 from fastapi import FastAPI
-
+from app.api.stocks import router as stocks_router
+from fastapi.middleware.cors import CORSMiddleware
 from app.api.portfolio import router as portfolio_router
 from app.core.config import settings
 from app.core.exceptions import global_exception_handler
@@ -14,6 +15,15 @@ app = FastAPI(
     version=settings.app_version
 )
 
+app.include_router(stocks_router)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.add_exception_handler(
     Exception,
