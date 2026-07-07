@@ -57,3 +57,15 @@ def delete_holding(
         "message": "Holding deleted successfully",
         "holding_id": holding_id
     }
+    
+@router.get("/holdings/{holding_id}")
+def get_holding(
+    holding_id: int,
+    db: Session = Depends(get_db)
+):
+    holding = PortfolioService.get_holding_by_id(db, holding_id)
+
+    if holding is None:
+        raise HTTPException(status_code=404, detail="Holding not found")
+
+    return holding
