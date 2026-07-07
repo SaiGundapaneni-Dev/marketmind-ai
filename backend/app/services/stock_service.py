@@ -1,5 +1,6 @@
 import logging
 import yfinance as yf
+from app.services.stock_score_service import StockScoreService
 
 logger = logging.getLogger("marketmind")
 
@@ -40,6 +41,8 @@ class StockService:
                 "fifty_two_week_low": info.get("fiftyTwoWeekLow"),
                 "analyst_target_price": info.get("targetMeanPrice"),
                 "recommendation": info.get("recommendationKey"),
+                
+                "marketmind_score": StockScoreService.calculate_score(info),
             }
 
         except Exception:
