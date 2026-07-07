@@ -63,6 +63,7 @@ class PortfolioService:
             profit_percent = (profit / cost) * 100 if cost > 0 else 0
 
             holdings.append({
+                "id": asset.id,
                 "asset_type": asset.asset_type,
                 "symbol": asset.symbol,
                 "name": asset.name,

@@ -14,6 +14,7 @@ class HoldingCreate(BaseModel):
 
 
 class HoldingResponse(BaseModel):
+    id: int
     asset_type: str
     symbol: str
     name: str
