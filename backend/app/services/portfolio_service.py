@@ -14,6 +14,11 @@ class PortfolioService:
         )
         
     @staticmethod
+    def update_holding(db: Session, holding_id: int, holding_data):
+        return PortfolioRepository.update_holding(db, holding_id, holding_data)
+        
+        
+    @staticmethod
     def get_holding_by_id(db: Session, holding_id: int):
         return PortfolioRepository.get_holding_by_id(db, holding_id)
     

@@ -5,6 +5,7 @@ class Settings(BaseSettings):
     app_name: str = "MarketMind AI"
     app_version: str = "1.0.0"
     environment: str = "development"
+    database_url: str
 
     class Config:
         env_file = ".env"

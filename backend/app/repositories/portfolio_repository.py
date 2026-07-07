@@ -42,3 +42,22 @@ class PortfolioRepository:
         db.commit()
 
         return holding
+        
+    @staticmethod
+    def update_holding(db: Session, holding_id: int, holding_data):
+        holding = PortfolioRepository.get_holding_by_id(db, holding_id)
+
+        if holding is None:
+            return None
+
+        holding.asset_type = holding_data.asset_type
+        holding.symbol = holding_data.symbol.upper()
+        holding.name = holding_data.name
+        holding.quantity = holding_data.quantity
+        holding.average_price = holding_data.average_price
+        holding.currency = holding_data.currency.upper()
+
+        db.commit()
+        db.refresh(holding)
+
+        return holding

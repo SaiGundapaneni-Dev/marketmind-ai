@@ -25,6 +25,13 @@ class HoldingResponse(BaseModel):
     profit: float
     profit_percent: float
 
+class HoldingUpdate(BaseModel):
+    asset_type: str
+    symbol: str
+    name: str
+    quantity: float = Field(gt=0)
+    average_price: float = Field(gt=0)
+    currency: str
 
 class PortfolioSummaryResponse(BaseModel):
     total_cost: float

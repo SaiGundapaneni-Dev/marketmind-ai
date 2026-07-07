@@ -32,7 +32,3 @@ def home():
         "message": f"Welcome to {settings.app_name}",
         "environment": settings.environment
     }
-    
-@app.get("/test-error")
-def test_error():
-    raise ValueError("Intentional test error")

@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, status, HTTPException
 from app.core.database import get_db
 from app.schemas.portfolio_schema import (
     HoldingCreate,
+    HoldingUpdate,
     PortfolioResponse
 )
 from app.services.portfolio_service import PortfolioService
@@ -69,3 +70,25 @@ def get_holding(
         raise HTTPException(status_code=404, detail="Holding not found")
 
     return holding
+    
+    
+@router.put("/holdings/{holding_id}")
+def update_holding(
+    holding_id: int,
+    holding: HoldingUpdate,
+    db: Session = Depends(get_db)
+):
+    updated_holding = PortfolioService.update_holding(
+        db,
+        holding_id,
+        holding
+    )
+
+    if updated_holding is None:
+        raise HTTPException(status_code=404, detail="Holding not found")
+
+    return {
+        "message": "Holding updated successfully",
+        "holding_id": updated_holding.id,
+        "symbol": updated_holding.symbol
+    }
