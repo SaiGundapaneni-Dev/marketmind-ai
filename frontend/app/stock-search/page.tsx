@@ -25,6 +25,13 @@ type StockData = {
   recommendation?: string;
 
   error?: string;
+  
+	 marketmind_score?: {
+	  score: number;
+	  rating: string;
+	  interpretation: string;
+	  reasons: string[];
+	};
 };
 
 function MetricCard({
@@ -419,6 +426,47 @@ export default function StockSearchPage() {
                     </div>
 
                   </div>
+				  
+		{stock.marketmind_score && (
+		  <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
+
+			<p className="text-sm font-medium text-blue-400">
+			  MarketMind Score
+			</p>
+
+			<div className="mt-3 flex items-end gap-4">
+
+			  <h2 className="text-4xl font-bold">
+				{stock.marketmind_score.score}/100
+			  </h2>
+
+			  <span className="rounded-full border border-slate-700 bg-slate-950 px-3 py-1 text-sm font-semibold">
+				{stock.marketmind_score.rating}
+			  </span>
+
+			</div>
+
+			<p className="mt-4 max-w-3xl text-slate-300">
+			  {stock.marketmind_score.interpretation}
+			</p>
+
+			<div className="mt-5 space-y-2">
+
+			  {stock.marketmind_score.reasons.map(
+				(reason, index) => (
+				  <p
+					key={`${reason}-${index}`}
+					className="text-sm text-slate-300"
+				  >
+					• {reason}
+				  </p>
+				)
+			  )}
+
+			</div>
+
+		  </div>
+		)}
 
 
                   {/* Fundamental Analysis */}
