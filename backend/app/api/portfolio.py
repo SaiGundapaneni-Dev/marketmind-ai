@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
-
+from fastapi import APIRouter, Depends, status, HTTPException
 from app.core.database import get_db
 from app.schemas.portfolio_schema import (
     HoldingCreate,
@@ -35,4 +35,25 @@ def create_holding(
         "message": "Holding created successfully",
         "holding_id": new_holding.id,
         "symbol": new_holding.symbol
+    }
+   
+@router.delete(
+    "/holdings/{holding_id}",
+    status_code=status.HTTP_200_OK
+)
+def delete_holding(
+    holding_id: int,
+    db: Session = Depends(get_db)
+):
+    deleted_holding = PortfolioService.delete_holding(db, holding_id)
+
+    if deleted_holding is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Holding not found"
+        )
+
+    return {
+        "message": "Holding deleted successfully",
+        "holding_id": holding_id
     }

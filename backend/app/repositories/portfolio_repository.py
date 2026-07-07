@@ -26,3 +26,19 @@ class PortfolioRepository:
         db.refresh(holding)
 
         return holding
+    @staticmethod
+    def get_holding_by_id(db: Session, holding_id: int):
+        return db.query(Holding).filter(Holding.id == holding_id).first()
+
+
+    @staticmethod
+    def delete_holding(db: Session, holding_id: int):
+        holding = PortfolioRepository.get_holding_by_id(db, holding_id)
+
+        if holding is None:
+            return None
+
+        db.delete(holding)
+        db.commit()
+
+        return holding

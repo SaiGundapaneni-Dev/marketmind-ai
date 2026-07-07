@@ -12,6 +12,10 @@ class PortfolioService:
             db,
             holding_data
         )
+        
+    @staticmethod
+    def delete_holding(db: Session, holding_id: int):
+        return PortfolioRepository.delete_holding(db, holding_id)
 
     @staticmethod
     def calculate(db: Session):
