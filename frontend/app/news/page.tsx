@@ -10,6 +10,8 @@ type NewsItem = {
   published_at?: string;
   summary?: string;
   sentiment: "positive" | "negative" | "neutral";
+  sentiment_confidence?: number;
+  sentiment_reason?: string;
   relevance_score?: number;
 };
 
@@ -19,6 +21,26 @@ type NewsResponse = {
   news: NewsItem[];
   error?: string;
 };
+
+function formatDate(value?: string) {
+  if (!value) {
+    return "Date unavailable";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return date.toLocaleString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
 
 export default function NewsPage() {
   const [symbol, setSymbol] = useState("");
@@ -68,16 +90,12 @@ export default function NewsPage() {
 
       <section className="flex-1 px-6 py-8">
         <div className="mx-auto max-w-5xl">
-          <p className="text-sm font-medium text-blue-400">
-            Market News
-          </p>
+          <p className="text-sm font-medium text-blue-400">Market News</p>
 
-          <h1 className="mt-1 text-3xl font-bold">
-            Stock News Search
-          </h1>
+          <h1 className="mt-1 text-3xl font-bold">Stock News Search</h1>
 
           <p className="mt-2 text-slate-400">
-            Search stock news and view relevance-filtered articles with basic sentiment labels.
+            Search stock news and view relevance-filtered articles with sentiment analysis.
           </p>
 
           <form onSubmit={searchNews} className="mt-8 flex gap-3">
@@ -97,11 +115,7 @@ export default function NewsPage() {
             </button>
           </form>
 
-          {data?.error && (
-            <p className="mt-6 text-red-400">
-              {data.error}
-            </p>
-          )}
+          {data?.error && <p className="mt-6 text-red-400">{data.error}</p>}
 
           {data && !data.error && (
             <div className="mt-8 space-y-4">
@@ -126,10 +140,17 @@ export default function NewsPage() {
                         {item.title || "Untitled"}
                       </h3>
 
-                      <p className="mt-1 text-sm text-slate-400">
-                        {item.publisher || "Unknown Publisher"}
-                        {item.published_at && ` • ${item.published_at}`}
-                      </p>
+                      <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-400">
+                        <span>
+                          {item.publisher || "Unknown Publisher"}
+                        </span>
+
+                        <span className="text-slate-600">•</span>
+
+                        <span>
+                          {formatDate(item.published_at)}
+                        </span>
+                      </div>
                     </div>
 
                     <div className="flex flex-col items-end gap-2">
@@ -139,6 +160,8 @@ export default function NewsPage() {
                         )}`}
                       >
                         {item.sentiment.toUpperCase()}
+                        {item.sentiment_confidence !== undefined &&
+                          ` ${(item.sentiment_confidence * 100).toFixed(0)}%`}
                       </span>
 
                       <span className="rounded-full border border-blue-500/30 px-3 py-1 text-xs font-semibold text-blue-400">
@@ -148,8 +171,12 @@ export default function NewsPage() {
                   </div>
 
                   {item.summary && (
-                    <p className="mt-4 text-slate-300">
-                      {item.summary}
+                    <p className="mt-4 text-slate-300">{item.summary}</p>
+                  )}
+
+                  {item.sentiment_reason && (
+                    <p className="mt-3 text-sm text-slate-500">
+                      Sentiment reason: {item.sentiment_reason}
                     </p>
                   )}
 
