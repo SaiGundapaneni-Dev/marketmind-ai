@@ -9,35 +9,98 @@ logger = logging.getLogger("marketmind")
 class NewsService:
 
     @staticmethod
+    def _build_keywords(symbol: str, company_name: str | None):
+        keywords = {symbol.lower()}
+
+        if company_name:
+            clean_name = (
+                company_name
+                .replace("Inc.", "")
+                .replace("Corporation", "")
+                .replace("Corp.", "")
+                .replace("Class A", "")
+                .replace("Common Stock", "")
+                .strip()
+            )
+
+            if clean_name:
+                keywords.add(clean_name.lower())
+
+            for word in clean_name.split():
+                if len(word) > 3:
+                    keywords.add(word.lower())
+
+        return list(keywords)
+
+    @staticmethod
+    def _relevance_score(text: str, keywords: list[str]):
+        text = (text or "").lower()
+
+        score = 0
+
+        for keyword in keywords:
+            if keyword and keyword in text:
+                score += 1
+
+        return score
+
+    @staticmethod
     def search_news(symbol: str):
         try:
             ticker_symbol = symbol.upper()
             ticker = yf.Ticker(ticker_symbol)
 
+            info = ticker.info or {}
+            company_name = info.get("longName") or info.get("shortName")
+
+            keywords = NewsService._build_keywords(
+                ticker_symbol,
+                company_name
+            )
+
             news_items = ticker.news or []
             results = []
+            seen_links = set()
 
-            for item in news_items[:10]:
+            for item in news_items:
                 content = item.get("content", item)
 
                 title = content.get("title")
                 summary = content.get("summary")
+                link = content.get("canonicalUrl", {}).get("url")
 
-                text_for_sentiment = f"{title or ''} {summary or ''}"
+                combined_text = f"{title or ''} {summary or ''}"
+
+                relevance_score = NewsService._relevance_score(
+                    combined_text,
+                    keywords
+                )
+
+                if relevance_score == 0:
+                    continue
+
+                if link and link in seen_links:
+                    continue
+
+                if link:
+                    seen_links.add(link)
 
                 results.append({
                     "title": title,
                     "publisher": content.get("provider", {}).get("displayName"),
-                    "link": content.get("canonicalUrl", {}).get("url"),
+                    "link": link,
                     "published_at": content.get("pubDate"),
                     "summary": summary,
-                    "sentiment": SentimentService.analyze(text_for_sentiment),
+                    "sentiment": SentimentService.analyze(combined_text),
+                    "relevance_score": relevance_score,
                 })
 
             return {
                 "symbol": ticker_symbol,
+                "company_name": company_name,
+                "keywords_used": keywords,
                 "count": len(results),
-                "news": results
+                "news": results[:10]
             }
 
         except Exception:
