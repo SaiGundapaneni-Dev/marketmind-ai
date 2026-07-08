@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from app.api.news import router as news_router
 from app.api.stocks import router as stocks_router
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.portfolio import router as portfolio_router
@@ -14,6 +15,8 @@ app = FastAPI(
     title=settings.app_name,
     version=settings.app_version
 )
+
+app.include_router(news_router)
 
 app.include_router(stocks_router)
 
