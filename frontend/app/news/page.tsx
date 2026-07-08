@@ -8,12 +8,9 @@ type NewsItem = {
   publisher?: string;
   link?: string;
   published_at?: string;
-  publishedAt?: string;
-  published?: string;
-  date?: string;
-  datetime?: string;
   summary?: string;
   sentiment: "positive" | "negative" | "neutral";
+  relevance_score?: number;
 };
 
 type NewsResponse = {
@@ -22,24 +19,6 @@ type NewsResponse = {
   news: NewsItem[];
   error?: string;
 };
-
-function formatNewsDate(value?: string) {
-  if (!value) return "Timestamp unavailable";
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "Timestamp unavailable";
-  }
-
-  return date.toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
 
 export default function NewsPage() {
   const [symbol, setSymbol] = useState("");
@@ -72,8 +51,14 @@ export default function NewsPage() {
   }
 
   function sentimentStyle(sentiment: string) {
-    if (sentiment === "positive") return "text-green-400 border-green-500/30";
-    if (sentiment === "negative") return "text-red-400 border-red-500/30";
+    if (sentiment === "positive") {
+      return "text-green-400 border-green-500/30";
+    }
+
+    if (sentiment === "negative") {
+      return "text-red-400 border-red-500/30";
+    }
+
     return "text-slate-400 border-slate-700";
   }
 
@@ -83,12 +68,16 @@ export default function NewsPage() {
 
       <section className="flex-1 px-6 py-8">
         <div className="mx-auto max-w-5xl">
-          <p className="text-sm font-medium text-blue-400">Market News</p>
+          <p className="text-sm font-medium text-blue-400">
+            Market News
+          </p>
 
-          <h1 className="mt-1 text-3xl font-bold">Stock News Search</h1>
+          <h1 className="mt-1 text-3xl font-bold">
+            Stock News Search
+          </h1>
 
           <p className="mt-2 text-slate-400">
-            Search stock news and view basic sentiment labels.
+            Search stock news and view relevance-filtered articles with basic sentiment labels.
           </p>
 
           <form onSubmit={searchNews} className="mt-8 flex gap-3">
@@ -108,7 +97,11 @@ export default function NewsPage() {
             </button>
           </form>
 
-          {data?.error && <p className="mt-6 text-red-400">{data.error}</p>}
+          {data?.error && (
+            <p className="mt-6 text-red-400">
+              {data.error}
+            </p>
+          )}
 
           {data && !data.error && (
             <div className="mt-8 space-y-4">
@@ -116,43 +109,30 @@ export default function NewsPage() {
                 {data.symbol} News ({data.count})
               </h2>
 
-              {data.news.length === 0 ? (
-                <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
-                  <p className="font-semibold text-white">
-                    No relevant news found.
-                  </p>
-                  <p className="mt-1 text-sm text-slate-400">
-                    We could not find strong news results for this stock right
-                    now. Try again later or search another ticker.
-                  </p>
+              {data.news.length === 0 && (
+                <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 text-center text-slate-400">
+                  No highly relevant news found for {data.symbol}.
                 </div>
-              ) : (
-                data.news.map((item, index) => (
-                  <div
-                    key={`${item.title}-${index}`}
-                    className="rounded-2xl border border-slate-800 bg-slate-900 p-5"
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <h3 className="text-lg font-semibold">
-                          {item.title || "Untitled"}
-                        </h3>
+              )}
 
-                        <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-400">
-                          <span>{item.publisher || "Unknown Publisher"}</span>
-                          <span>•</span>
-                          <span>
-                            {formatNewsDate(
-                              item.published_at ||
-                                item.publishedAt ||
-                                item.published ||
-                                item.date ||
-                                item.datetime
-                            )}
-                          </span>
-                        </div>
-                      </div>
+              {data.news.map((item, index) => (
+                <div
+                  key={`${item.title}-${index}`}
+                  className="rounded-2xl border border-slate-800 bg-slate-900 p-5"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h3 className="text-lg font-semibold">
+                        {item.title || "Untitled"}
+                      </h3>
 
+                      <p className="mt-1 text-sm text-slate-400">
+                        {item.publisher || "Unknown Publisher"}
+                        {item.published_at && ` • ${item.published_at}`}
+                      </p>
+                    </div>
+
+                    <div className="flex flex-col items-end gap-2">
                       <span
                         className={`rounded-full border px-3 py-1 text-xs font-semibold ${sentimentStyle(
                           item.sentiment
@@ -160,25 +140,31 @@ export default function NewsPage() {
                       >
                         {item.sentiment.toUpperCase()}
                       </span>
+
+                      <span className="rounded-full border border-blue-500/30 px-3 py-1 text-xs font-semibold text-blue-400">
+                        Relevance {item.relevance_score ?? 0}
+                      </span>
                     </div>
-
-                    {item.summary && (
-                      <p className="mt-4 text-slate-300">{item.summary}</p>
-                    )}
-
-                    {item.link && (
-                      <a
-                        href={item.link}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="mt-4 inline-block text-sm text-blue-400 hover:underline"
-                      >
-                        Read article
-                      </a>
-                    )}
                   </div>
-                ))
-              )}
+
+                  {item.summary && (
+                    <p className="mt-4 text-slate-300">
+                      {item.summary}
+                    </p>
+                  )}
+
+                  {item.link && (
+                    <a
+                      href={item.link}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-4 inline-block text-sm text-blue-400 hover:underline"
+                    >
+                      Read article
+                    </a>
+                  )}
+                </div>
+              ))}
             </div>
           )}
         </div>
