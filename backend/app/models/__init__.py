@@ -1,1 +1,1 @@
-from app.models.portfolio_models import User, Portfolio, Holding
+from app.models.portfolio_models import User, Portfolio, Holding, NewsSearch

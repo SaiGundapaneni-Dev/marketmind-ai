@@ -41,3 +41,11 @@ class Holding(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     portfolio = relationship("Portfolio", back_populates="holdings")
+    
+class NewsSearch(Base):
+    __tablename__ = "news_searches"
+
+    id = Column(Integer, primary_key=True, index=True)
+    symbol = Column(String, nullable=False)
+    result_count = Column(Integer, nullable=False, default=0)
+    searched_at = Column(DateTime, default=datetime.utcnow)
