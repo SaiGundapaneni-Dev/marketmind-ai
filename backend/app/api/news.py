@@ -1,5 +1,7 @@
 from fastapi import APIRouter
 
+from app.services.news_service import NewsService
+
 router = APIRouter(
     prefix="/news",
     tags=["News"]
@@ -8,7 +10,4 @@ router = APIRouter(
 
 @router.get("/search/{symbol}")
 def search_news(symbol: str):
-    return {
-        "symbol": symbol.upper(),
-        "message": "News search endpoint working"
-    }
+    return NewsService.search_news(symbol)
