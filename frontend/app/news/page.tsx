@@ -67,32 +67,51 @@ export default function NewsPage() {
       setRecentSearches([]);
     }
   }
+  
+  async function fetchNews(searchSymbol: string) {
+	  const cleanSymbol = searchSymbol.trim().toUpperCase();
+
+	  if (!cleanSymbol) {
+		return;
+	  }
+
+	  setSymbol(cleanSymbol);
+	  setLoading(true);
+	  setData(null);
+
+	  try {
+		const response = await fetch(
+		  `http://127.0.0.1:8000/news/search/${cleanSymbol}`
+		);
+
+		if (!response.ok) {
+		  throw new Error("News search failed");
+		}
+
+		const result: NewsResponse = await response.json();
+
+		setData(result);
+
+		await loadRecentSearches();
+	  } catch (error) {
+		console.error("News search error:", error);
+
+		setData({
+		  symbol: cleanSymbol,
+		  count: 0,
+		  news: [],
+		  error: "Unable to connect to MarketMind API.",
+		});
+	  } finally {
+		setLoading(false);
+	  }
+	}
 
   async function searchNews(event: React.FormEvent) {
-    event.preventDefault();
+  event.preventDefault();
 
-    setLoading(true);
-    setData(null);
-
-    try {
-      const response = await fetch(
-        `http://127.0.0.1:8000/news/search/${symbol}`
-      );
-
-      const result = await response.json();
-      setData(result);
-      loadRecentSearches();
-    } catch {
-      setData({
-        symbol,
-        count: 0,
-        news: [],
-        error: "Unable to connect to MarketMind API.",
-      });
-    } finally {
-      setLoading(false);
-    }
-  }
+  await fetchNews(symbol);
+}
 
   function sentimentStyle(sentiment: string) {
     if (sentiment === "positive") {
@@ -145,7 +164,7 @@ export default function NewsPage() {
                 {recentSearches.map((item) => (
                   <button
                     key={item.id}
-                    onClick={() => setSymbol(item.symbol)}
+                    onClick={() => fetchNews(item.symbol)}
                     className="rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:border-blue-500 hover:text-white"
                   >
                     {item.symbol} · {item.result_count} articles
