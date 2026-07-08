@@ -120,6 +120,35 @@ export default function NewsPage() {
           {data && !data.error && (
             <div className="mt-8 space-y-4">
               <h2 className="text-xl font-semibold">
+				
+				<div className="grid gap-4 md:grid-cols-4">
+				  <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+					<p className="text-sm text-slate-400">Total Articles</p>
+					<p className="mt-1 text-2xl font-bold">{data.count}</p>
+				  </div>
+
+				  <div className="rounded-xl border border-green-500/20 bg-slate-900 p-4">
+					<p className="text-sm text-slate-400">Positive</p>
+					<p className="mt-1 text-2xl font-bold text-green-400">
+					  {data.news.filter((item) => item.sentiment === "positive").length}
+					</p>
+				  </div>
+
+				  <div className="rounded-xl border border-slate-700 bg-slate-900 p-4">
+					<p className="text-sm text-slate-400">Neutral</p>
+					<p className="mt-1 text-2xl font-bold text-slate-300">
+					  {data.news.filter((item) => item.sentiment === "neutral").length}
+					</p>
+				  </div>
+
+				  <div className="rounded-xl border border-red-500/20 bg-slate-900 p-4">
+					<p className="text-sm text-slate-400">Negative</p>
+					<p className="mt-1 text-2xl font-bold text-red-400">
+					  {data.news.filter((item) => item.sentiment === "negative").length}
+					</p>
+				  </div>
+				</div>
+				
                 {data.symbol} News ({data.count})
               </h2>
 
