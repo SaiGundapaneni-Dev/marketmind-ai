@@ -8,6 +8,10 @@ type NewsItem = {
   publisher?: string;
   link?: string;
   published_at?: string;
+  publishedAt?: string;
+  published?: string;
+  date?: string;
+  datetime?: string;
   summary?: string;
   sentiment: "positive" | "negative" | "neutral";
 };
@@ -18,6 +22,24 @@ type NewsResponse = {
   news: NewsItem[];
   error?: string;
 };
+
+function formatNewsDate(value?: string) {
+  if (!value) return "Timestamp unavailable";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Timestamp unavailable";
+  }
+
+  return date.toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
 
 export default function NewsPage() {
   const [symbol, setSymbol] = useState("");
@@ -94,47 +116,69 @@ export default function NewsPage() {
                 {data.symbol} News ({data.count})
               </h2>
 
-              {data.news.map((item, index) => (
-                <div
-                  key={`${item.title}-${index}`}
-                  className="rounded-2xl border border-slate-800 bg-slate-900 p-5"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <h3 className="text-lg font-semibold">
-                        {item.title || "Untitled"}
-                      </h3>
+              {data.news.length === 0 ? (
+                <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
+                  <p className="font-semibold text-white">
+                    No relevant news found.
+                  </p>
+                  <p className="mt-1 text-sm text-slate-400">
+                    We could not find strong news results for this stock right
+                    now. Try again later or search another ticker.
+                  </p>
+                </div>
+              ) : (
+                data.news.map((item, index) => (
+                  <div
+                    key={`${item.title}-${index}`}
+                    className="rounded-2xl border border-slate-800 bg-slate-900 p-5"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <h3 className="text-lg font-semibold">
+                          {item.title || "Untitled"}
+                        </h3>
 
-                      <p className="mt-1 text-sm text-slate-400">
-                        {item.publisher || "Unknown Publisher"}
-                      </p>
+                        <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-400">
+                          <span>{item.publisher || "Unknown Publisher"}</span>
+                          <span>•</span>
+                          <span>
+                            {formatNewsDate(
+                              item.published_at ||
+                                item.publishedAt ||
+                                item.published ||
+                                item.date ||
+                                item.datetime
+                            )}
+                          </span>
+                        </div>
+                      </div>
+
+                      <span
+                        className={`rounded-full border px-3 py-1 text-xs font-semibold ${sentimentStyle(
+                          item.sentiment
+                        )}`}
+                      >
+                        {item.sentiment.toUpperCase()}
+                      </span>
                     </div>
 
-                    <span
-                      className={`rounded-full border px-3 py-1 text-xs font-semibold ${sentimentStyle(
-                        item.sentiment
-                      )}`}
-                    >
-                      {item.sentiment.toUpperCase()}
-                    </span>
+                    {item.summary && (
+                      <p className="mt-4 text-slate-300">{item.summary}</p>
+                    )}
+
+                    {item.link && (
+                      <a
+                        href={item.link}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-4 inline-block text-sm text-blue-400 hover:underline"
+                      >
+                        Read article
+                      </a>
+                    )}
                   </div>
-
-                  {item.summary && (
-                    <p className="mt-4 text-slate-300">{item.summary}</p>
-                  )}
-
-                  {item.link && (
-                    <a
-                      href={item.link}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="mt-4 inline-block text-sm text-blue-400 hover:underline"
-                    >
-                      Read article
-                    </a>
-                  )}
-                </div>
-              ))}
+                ))
+              )}
             </div>
           )}
         </div>

@@ -17,8 +17,6 @@ export default function Sidebar() {
 		<Link href="/news" className="block px-4 py-3 hover:text-white">
 			News
 		</Link>
-
-        <p className="px-4 py-3">News</p>
         <p className="px-4 py-3">IPO Analyzer</p>
         <p className="px-4 py-3">AI Copilot</p>
       </nav>
