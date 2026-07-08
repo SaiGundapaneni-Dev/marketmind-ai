@@ -22,10 +22,20 @@ type NewsResponse = {
   error?: string;
 };
 
+type RecentSearch = {
+  id: number;
+  symbol: string;
+  result_count: number;
+  searched_at: string;
+};
+
+type RecentSearchResponse = {
+  count: number;
+  searches: RecentSearch[];
+};
+
 function formatDate(value?: string) {
-  if (!value) {
-    return "Date unavailable";
-  }
+  if (!value) return "Date unavailable";
 
   const date = new Date(value);
 
@@ -45,7 +55,18 @@ function formatDate(value?: string) {
 export default function NewsPage() {
   const [symbol, setSymbol] = useState("");
   const [data, setData] = useState<NewsResponse | null>(null);
+  const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
   const [loading, setLoading] = useState(false);
+
+  async function loadRecentSearches() {
+    try {
+      const response = await fetch("http://127.0.0.1:8000/news/recent");
+      const result: RecentSearchResponse = await response.json();
+      setRecentSearches(result.searches);
+    } catch {
+      setRecentSearches([]);
+    }
+  }
 
   async function searchNews(event: React.FormEvent) {
     event.preventDefault();
@@ -60,6 +81,7 @@ export default function NewsPage() {
 
       const result = await response.json();
       setData(result);
+      loadRecentSearches();
     } catch {
       setData({
         symbol,
@@ -115,42 +137,59 @@ export default function NewsPage() {
             </button>
           </form>
 
+          {recentSearches.length > 0 && (
+            <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-900 p-5">
+              <h2 className="text-lg font-semibold">Recent Searches</h2>
+
+              <div className="mt-4 flex flex-wrap gap-2">
+                {recentSearches.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => setSymbol(item.symbol)}
+                    className="rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:border-blue-500 hover:text-white"
+                  >
+                    {item.symbol} · {item.result_count} articles
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {data?.error && <p className="mt-6 text-red-400">{data.error}</p>}
 
           {data && !data.error && (
             <div className="mt-8 space-y-4">
               <h2 className="text-xl font-semibold">
-				
-				<div className="grid gap-4 md:grid-cols-4">
-				  <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
-					<p className="text-sm text-slate-400">Total Articles</p>
-					<p className="mt-1 text-2xl font-bold">{data.count}</p>
-				  </div>
-
-				  <div className="rounded-xl border border-green-500/20 bg-slate-900 p-4">
-					<p className="text-sm text-slate-400">Positive</p>
-					<p className="mt-1 text-2xl font-bold text-green-400">
-					  {data.news.filter((item) => item.sentiment === "positive").length}
-					</p>
-				  </div>
-
-				  <div className="rounded-xl border border-slate-700 bg-slate-900 p-4">
-					<p className="text-sm text-slate-400">Neutral</p>
-					<p className="mt-1 text-2xl font-bold text-slate-300">
-					  {data.news.filter((item) => item.sentiment === "neutral").length}
-					</p>
-				  </div>
-
-				  <div className="rounded-xl border border-red-500/20 bg-slate-900 p-4">
-					<p className="text-sm text-slate-400">Negative</p>
-					<p className="mt-1 text-2xl font-bold text-red-400">
-					  {data.news.filter((item) => item.sentiment === "negative").length}
-					</p>
-				  </div>
-				</div>
-				
                 {data.symbol} News ({data.count})
               </h2>
+
+              <div className="grid gap-4 md:grid-cols-4">
+                <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+                  <p className="text-sm text-slate-400">Total Articles</p>
+                  <p className="mt-1 text-2xl font-bold">{data.count}</p>
+                </div>
+
+                <div className="rounded-xl border border-green-500/20 bg-slate-900 p-4">
+                  <p className="text-sm text-slate-400">Positive</p>
+                  <p className="mt-1 text-2xl font-bold text-green-400">
+                    {data.news.filter((item) => item.sentiment === "positive").length}
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-slate-700 bg-slate-900 p-4">
+                  <p className="text-sm text-slate-400">Neutral</p>
+                  <p className="mt-1 text-2xl font-bold text-slate-300">
+                    {data.news.filter((item) => item.sentiment === "neutral").length}
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-red-500/20 bg-slate-900 p-4">
+                  <p className="text-sm text-slate-400">Negative</p>
+                  <p className="mt-1 text-2xl font-bold text-red-400">
+                    {data.news.filter((item) => item.sentiment === "negative").length}
+                  </p>
+                </div>
+              </div>
 
               {data.news.length === 0 && (
                 <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 text-center text-slate-400">
@@ -170,15 +209,9 @@ export default function NewsPage() {
                       </h3>
 
                       <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-400">
-                        <span>
-                          {item.publisher || "Unknown Publisher"}
-                        </span>
-
+                        <span>{item.publisher || "Unknown Publisher"}</span>
                         <span className="text-slate-600">•</span>
-
-                        <span>
-                          {formatDate(item.published_at)}
-                        </span>
+                        <span>{formatDate(item.published_at)}</span>
                       </div>
                     </div>
 
