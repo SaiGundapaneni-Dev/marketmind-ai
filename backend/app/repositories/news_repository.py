@@ -4,6 +4,15 @@ from app.models import NewsSearch
 
 
 class NewsRepository:
+    
+    @staticmethod
+    def get_recent_searches(db: Session, limit: int = 10):
+        return (
+            db.query(NewsSearch)
+            .order_by(NewsSearch.searched_at.desc())
+            .limit(limit)
+            .all()
+        )
 
     @staticmethod
     def create_search_log(

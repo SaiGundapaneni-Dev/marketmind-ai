@@ -25,3 +25,22 @@ def search_news(
     )
 
     return result
+    
+@router.get("/recent")
+def get_recent_news_searches(
+    db: Session = Depends(get_db)
+):
+    searches = NewsRepository.get_recent_searches(db)
+
+    return {
+        "count": len(searches),
+        "searches": [
+            {
+                "id": item.id,
+                "symbol": item.symbol,
+                "result_count": item.result_count,
+                "searched_at": item.searched_at
+            }
+            for item in searches
+        ]
+    }
