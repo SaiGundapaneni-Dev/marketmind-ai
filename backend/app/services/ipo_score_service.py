@@ -11,6 +11,7 @@ class IPOScoreService:
         exchange = ipo.get("exchange")
         description = ipo.get("description")
 
+        # IPO status
         if status == "upcoming":
             score += 25
             reasons.append("Company has an upcoming IPO status.")
@@ -18,30 +19,40 @@ class IPOScoreService:
         elif status == "rumored":
             score += 10
             reasons.append("IPO is currently rumored but not confirmed.")
-            warnings.append("IPO plans are not officially confirmed and may change.")
+            warnings.append(
+                "IPO plans are not officially confirmed and may change."
+            )
 
         elif status == "listed":
             reasons.append("Company is already publicly listed.")
-            warnings.append("This company is no longer an upcoming IPO opportunity.")
+            warnings.append(
+                "This company is no longer an upcoming IPO opportunity."
+            )
 
+        # Sector information
         if sector:
             score += 15
             reasons.append("Sector information is available.")
         else:
             warnings.append("Sector information is unavailable.")
 
+        # Exchange information
         if exchange:
             score += 15
             reasons.append("Exchange information is available.")
         else:
-            warnings.append("Exchange information has not been confirmed.")
+            warnings.append(
+                "Exchange information has not been confirmed."
+            )
 
+        # Company profile
         if description:
             score += 10
             reasons.append("Basic company profile information is available.")
         else:
             warnings.append("Company profile information is missing.")
 
+        # Limit score because financial analysis is not connected yet
         score = min(score, 60)
 
         if status == "listed":
@@ -65,7 +76,8 @@ class IPOScoreService:
             confidence = 20
 
         warnings.append(
-            "Financial statements, IPO pricing, valuation, and risk factors are not yet included in this analysis."
+            "Financial statements, IPO pricing, valuation, and risk factors "
+            "are not yet included in this analysis."
         )
 
         return {
