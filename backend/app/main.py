@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from app.api.ipo import router as ipo_router
 from app.api.news import router as news_router
 from app.api.stocks import router as stocks_router
 from fastapi.middleware.cors import CORSMiddleware
@@ -19,6 +20,8 @@ app = FastAPI(
 app.include_router(news_router)
 
 app.include_router(stocks_router)
+
+app.include_router(ipo_router)
 
 app.add_middleware(
     CORSMiddleware,
