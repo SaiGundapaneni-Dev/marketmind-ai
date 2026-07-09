@@ -46,6 +46,6 @@ class NewsSearch(Base):
     __tablename__ = "news_searches"
 
     id = Column(Integer, primary_key=True, index=True)
-    symbol = Column(String, nullable=False)
+    symbol = Column(String, nullable=False, unique=True, index=True)
     result_count = Column(Integer, nullable=False, default=0)
     searched_at = Column(DateTime, default=datetime.utcnow)
