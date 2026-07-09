@@ -26,6 +26,28 @@ class SECService:
         "User-Agent": "MarketMindAI contact@example.com",
         "Accept-Encoding": "gzip, deflate",
     }
+    
+    @staticmethod
+    def get_ipo_filings(cik: str):
+        result = SECService.get_company_filings(cik)
+
+        if result.get("error"):
+            return result
+
+        ipo_forms = {"S-1", "S-1/A", "F-1", "F-1/A", "424B4", "424B3"}
+
+        filtered_filings = [
+            filing
+            for filing in result.get("filings", [])
+            if filing.get("form") in ipo_forms
+        ]
+
+        return {
+            "company_name": result.get("company_name"),
+            "cik": result.get("cik"),
+            "count": len(filtered_filings),
+            "ipo_filings": filtered_filings,
+        }
 
     @staticmethod
     def search_company(company_name: str):

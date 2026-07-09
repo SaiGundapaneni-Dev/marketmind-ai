@@ -17,3 +17,7 @@ def search_sec_company(company_name: str):
 @router.get("/sec-filings/{cik}")
 def get_sec_company_filings(cik: str):
     return SECService.get_company_filings(cik)
+    
+@router.get("/sec-ipo-filings/{cik}")
+def get_sec_ipo_filings(cik: str):
+    return SECService.get_ipo_filings(cik)
