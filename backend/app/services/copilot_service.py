@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from app.services.stock_service import StockService
 
 from app.services.portfolio_service import PortfolioService
 
@@ -39,6 +40,39 @@ class CopilotService:
                     f"Total profit is ${portfolio['summary']['total_profit']}."
                 ),
                 "data": portfolio,
+                "status": "success",
+            }
+            
+        if intent == "stock":
+            words = question.upper().split()
+            symbol = None
+
+            for word in words:
+                clean_word = word.replace("?", "").replace(".", "").replace(",", "")
+                if clean_word.isalpha() and 1 <= len(clean_word) <= 5:
+                    symbol = clean_word
+                    break
+
+            if not symbol:
+                return {
+                    "question": question,
+                    "intent": intent,
+                    "answer": "Please include a valid stock symbol like AAPL, NVDA, or MSFT.",
+                    "status": "needs_more_info",
+                }
+
+            stock = StockService.search_stock(symbol)
+
+            return {
+                "question": question,
+                "intent": intent,
+                "answer": (
+                    f"{stock.get('company_name', symbol)} is trading around "
+                    f"{stock.get('currency', 'USD')} {stock.get('current_price')}. "
+                    f"MarketMind score: "
+                    f"{stock.get('marketmind_score', {}).get('score', 'N/A')}/100."
+                ),
+                "data": stock,
                 "status": "success",
             }
 
