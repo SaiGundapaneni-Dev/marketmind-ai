@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from app.services.stock_service import StockService
-
+from app.services.news_service import NewsService
 from app.services.portfolio_service import PortfolioService
 
 
@@ -73,6 +73,47 @@ class CopilotService:
                     f"{stock.get('marketmind_score', {}).get('score', 'N/A')}/100."
                 ),
                 "data": stock,
+                "status": "success",
+            }
+            
+        if intent == "news":
+            words = question.upper().split()
+            symbol = None
+
+            for word in words:
+                clean_word = word.replace("?", "").replace(".", "").replace(",", "")
+                if clean_word.isalpha() and 1 <= len(clean_word) <= 5:
+                    symbol = clean_word
+                    break
+
+            if not symbol:
+                return {
+                    "question": question,
+                    "intent": intent,
+                    "answer": "Please include a valid stock symbol like AAPL, NVDA, or MSFT.",
+                    "status": "needs_more_info",
+                }
+
+            news = NewsService.search_news(symbol)
+
+            positive_count = len([
+                item for item in news.get("news", [])
+                if item.get("sentiment") == "positive"
+            ])
+
+            negative_count = len([
+                item for item in news.get("news", [])
+                if item.get("sentiment") == "negative"
+            ])
+
+            return {
+                "question": question,
+                "intent": intent,
+                "answer": (
+                    f"I found {news.get('count', 0)} relevant articles for {symbol}. "
+                    f"Positive: {positive_count}, Negative: {negative_count}."
+                ),
+                "data": news,
                 "status": "success",
             }
 
