@@ -1,6 +1,8 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 
+from app.services.copilot_service import CopilotService
+
 
 router = APIRouter(
     prefix="/copilot",
@@ -14,8 +16,4 @@ class CopilotRequest(BaseModel):
 
 @router.post("/ask")
 def ask_copilot(request: CopilotRequest):
-    return {
-        "question": request.question,
-        "answer": "MarketMind Copilot endpoint is working.",
-        "status": "success",
-    }
+    return CopilotService.answer(request.question)
