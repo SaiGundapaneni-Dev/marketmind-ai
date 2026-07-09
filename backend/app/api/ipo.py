@@ -1,5 +1,7 @@
 from fastapi import APIRouter
 
+from app.services.ipo_service import IPOService
+
 router = APIRouter(
     prefix="/ipo",
     tags=["IPO"]
@@ -8,7 +10,4 @@ router = APIRouter(
 
 @router.get("/search/{company_name}")
 def search_ipo(company_name: str):
-    return {
-        "company_name": company_name,
-        "message": "IPO analyzer endpoint working"
-    }
+    return IPOService.search_ipo(company_name)
