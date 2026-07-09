@@ -5,6 +5,32 @@ from app.services.portfolio_service import PortfolioService
 
 
 class CopilotService:
+    
+    @staticmethod
+    def extract_symbol(question: str):
+        stop_words = {
+            "WHAT", "IS", "THE", "LATEST", "NEWS", "ON", "ABOUT",
+            "TELL", "ME", "STOCK", "PRICE", "COMPANY", "HOW", "MY",
+            "DOING", "PORTFOLIO", "FOR"
+        }
+
+        words = question.upper().split()
+
+        for word in words:
+            clean_word = (
+                word.replace("?", "")
+                .replace(".", "")
+                .replace(",", "")
+                .replace("!", "")
+            )
+
+            if clean_word in stop_words:
+                continue
+
+            if clean_word.isalpha() and 1 <= len(clean_word) <= 5:
+                return clean_word
+
+        return None
 
     @staticmethod
     def detect_intent(question: str):
@@ -50,7 +76,7 @@ class CopilotService:
             for word in words:
                 clean_word = word.replace("?", "").replace(".", "").replace(",", "")
                 if clean_word.isalpha() and 1 <= len(clean_word) <= 5:
-                    symbol = clean_word
+                    symbol = CopilotService.extract_symbol(question)
                     break
 
             if not symbol:
@@ -83,7 +109,7 @@ class CopilotService:
             for word in words:
                 clean_word = word.replace("?", "").replace(".", "").replace(",", "")
                 if clean_word.isalpha() and 1 <= len(clean_word) <= 5:
-                    symbol = clean_word
+                    symbol = CopilotService.extract_symbol(question)
                     break
 
             if not symbol:
