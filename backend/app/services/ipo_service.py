@@ -1,4 +1,5 @@
 from app.data.ipo_data import SAMPLE_IPOS
+from app.services.ipo_score_service import IPOScoreService
 
 
 class IPOService:
@@ -21,16 +22,23 @@ class IPOService:
                 "ipo_available": False,
                 "message": "No IPO information found in the current data source.",
                 "analysis": {
+                    "score": 0,
+                    "rating": "Insufficient Data",
                     "recommendation": "Not enough data",
                     "confidence": 0,
                     "reasons": [
-                        "Company was not found in the current IPO dataset",
-                        "Live IPO data source is not connected yet"
-                    ]
-                }
+                        "Company was not found in the current IPO dataset.",
+                        "Live IPO data source is not connected yet.",
+                    ],
+                    "warnings": [
+                        "This result is based only on the current sample IPO dataset.",
+                    ],
+                },
             }
 
         is_available = matched_ipo["status"] in ["upcoming", "rumored"]
+
+        analysis = IPOScoreService.calculate_score(matched_ipo)
 
         return {
             "company_name": matched_ipo["company_name"],
@@ -42,13 +50,5 @@ class IPOService:
             "description": matched_ipo["description"],
             "ipo_available": is_available,
             "message": f"IPO information found for {matched_ipo['company_name']}.",
-            "analysis": {
-                "recommendation": "Research further",
-                "confidence": 40,
-                "reasons": [
-                    "Basic IPO profile is available",
-                    "Financial statements are not connected yet",
-                    "Valuation analysis is not connected yet"
-                ]
-            }
+            "analysis": analysis,
         }
