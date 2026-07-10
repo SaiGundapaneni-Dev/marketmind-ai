@@ -20,7 +20,9 @@ export default function Sidebar() {
         <Link href="/ipo-analyzer" className="block px-4 py-3 hover:text-white">
 		  IPO Analyzer
 		</Link>
-        <p className="px-4 py-3">AI Copilot</p>
+        <Link href="/copilot" className="block px-4 py-3 hover:text-white">
+		  AI Copilot
+		</Link>
       </nav>
     </aside>
   );
