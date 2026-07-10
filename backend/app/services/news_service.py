@@ -85,13 +85,17 @@ class NewsService:
                 if link:
                     seen_links.add(link)
 
+                sentiment_result = SentimentService.analyze(combined_text)
+
                 results.append({
                     "title": title,
                     "publisher": content.get("provider", {}).get("displayName"),
                     "link": link,
                     "published_at": content.get("pubDate"),
                     "summary": summary,
-                    "sentiment": SentimentService.analyze(combined_text),
+                    "sentiment": sentiment_result["label"],
+                    "sentiment_confidence": sentiment_result["confidence"],
+                    "sentiment_reason": sentiment_result["reason"],
                     "relevance_score": relevance_score,
                 })
 

@@ -11,6 +11,35 @@ from app.services.stock_service import StockService
 
 class CopilotService:
 
+    COMPANY_SYMBOLS = {
+        "apple": "AAPL",
+        "apple inc": "AAPL",
+        "microsoft": "MSFT",
+        "microsoft corporation": "MSFT",
+        "nvidia": "NVDA",
+        "tesla": "TSLA",
+        "amazon": "AMZN",
+        "amazon.com": "AMZN",
+        "google": "GOOGL",
+        "alphabet": "GOOGL",
+        "meta": "META",
+        "meta platforms": "META",
+        "facebook": "META",
+        "netflix": "NFLX",
+        "amd": "AMD",
+        "advanced micro devices": "AMD",
+        "intel": "INTC",
+        "palantir": "PLTR",
+        "sofi": "SOFI",
+        "coinbase": "COIN",
+        "salesforce": "CRM",
+        "oracle": "ORCL",
+        "ibm": "IBM",
+        "walmart": "WMT",
+        "disney": "DIS",
+        "berkshire hathaway": "BRK.B",
+    }
+
     SYMBOL_STOP_WORDS = {
         "A",
         "AI",
@@ -19,12 +48,24 @@ class CopilotService:
         "AND",
         "ARE",
         "ABOUT",
+        "ANALYSIS",
         "ANALYZE",
+        "ARTICLE",
+        "ARTICLES",
         "COMPANY",
+        "CURRENT",
+        "DEVELOPMENT",
+        "DEVELOPMENTS",
         "DO",
         "DOING",
         "FOR",
         "FROM",
+        "FUNDAMENTAL",
+        "FUNDAMENTALS",
+        "GET",
+        "GIVE",
+        "HEADLINE",
+        "HEADLINES",
         "HOW",
         "I",
         "IN",
@@ -36,12 +77,22 @@ class CopilotService:
         "NEWS",
         "OF",
         "ON",
+        "PLEASE",
         "PRICE",
+        "RESEARCH",
+        "SENTIMENT",
         "SHARE",
+        "SHOW",
         "STOCK",
         "TELL",
+        "THAT",
         "THE",
+        "THESE",
+        "THIS",
+        "THOSE",
         "TO",
+        "TODAY",
+        "UPDATE",
         "VALUATION",
         "WHAT",
         "WITH",
@@ -115,24 +166,57 @@ class CopilotService:
 
     @staticmethod
     def extract_symbol(question: str) -> str | None:
+        normalized_question = question.lower().strip()
+
+        # First resolve company names to verified ticker symbols.
+        # Longer company names are checked first.
+        sorted_companies = sorted(
+            CopilotService.COMPANY_SYMBOLS,
+            key=len,
+            reverse=True,
+        )
+
+        for company_name in sorted_companies:
+            pattern = rf"(?<!\w){re.escape(company_name)}(?!\w)"
+
+            if re.search(pattern, normalized_question):
+                return CopilotService.COMPANY_SYMBOLS[company_name]
+
         words = re.findall(r"\b[A-Za-z]{1,5}\b", question)
 
-        # Prefer an explicitly uppercase ticker such as NVDA or AAPL.
-        for word in words:
-            if (
-                word.isupper()
-                and word not in CopilotService.SYMBOL_STOP_WORDS
-            ):
-                return word
-
-        # Support lowercase ticker questions such as "news on nvda".
+        # Prefer explicitly uppercase ticker symbols such as NVDA or AAPL.
         for word in words:
             candidate = word.upper()
 
-            if candidate in CopilotService.SYMBOL_STOP_WORDS:
+            if (
+                word.isupper()
+                and candidate not in CopilotService.SYMBOL_STOP_WORDS
+                and 1 <= len(candidate) <= 5
+            ):
+                return candidate
+
+        # Support lowercase tickers only when they appear after clear
+        # stock-related context words.
+        ticker_patterns = [
+            r"\b(?:stock|ticker|symbol|shares?)\s+(?:for|of|on)?\s*([a-z]{1,5})\b",
+            r"\b(?:news|headlines?|sentiment|articles?)\s+(?:for|of|on|about)?\s*([a-z]{1,5})\b",
+            r"\b(?:analyze|research|check|show)\s+([a-z]{1,5})\b",
+            r"\b(?:about|on|for)\s+([a-z]{1,5})\b",
+        ]
+
+        for pattern in ticker_patterns:
+            match = re.search(
+                pattern,
+                normalized_question,
+                flags=re.IGNORECASE,
+            )
+
+            if not match:
                 continue
 
-            if 2 <= len(candidate) <= 5:
+            candidate = match.group(1).upper()
+
+            if candidate not in CopilotService.SYMBOL_STOP_WORDS:
                 return candidate
 
         return None
@@ -210,8 +294,8 @@ class CopilotService:
                     "question": clean_question,
                     "intent": intent,
                     "answer": (
-                        "Please include a US stock ticker such as "
-                        "AAPL, NVDA, MSFT, or TSLA."
+                        "Please include a US stock ticker or company name, "
+                        "such as AAPL, Nvidia, Microsoft, or Tesla."
                     ),
                     "status": "needs_more_info",
                 }
@@ -255,8 +339,8 @@ class CopilotService:
                     "question": clean_question,
                     "intent": intent,
                     "answer": (
-                        "Please include a US stock ticker such as "
-                        "AAPL, NVDA, MSFT, or TSLA."
+                        "Please include a US stock ticker or company name, "
+                        "such as AAPL, Nvidia, Microsoft, or Tesla."
                     ),
                     "status": "needs_more_info",
                 }

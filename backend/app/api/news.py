@@ -18,11 +18,12 @@ def search_news(
 ):
     result = NewsService.search_news(symbol)
 
-    NewsRepository.create_search_log(
-        db=db,
-        symbol=result["symbol"],
-        result_count=result["count"]
-    )
+    if not result.get("error") and result.get("count", 0) > 0:
+        NewsRepository.create_search_log(
+            db=db,
+            symbol=result["symbol"],
+            result_count=result["count"]
+        )
 
     return result
     
