@@ -63,10 +63,29 @@ class LargestHoldingResponse(BaseModel):
 
 class PortfolioAllocationResponse(BaseModel):
     by_asset_type: List[AssetTypeAllocationResponse]
-    largest_holding: Optional[LargestHoldingResponse] = None
+    largest_holding: Optional[
+        LargestHoldingResponse
+    ] = None
+
+
+class ConcentratedPositionResponse(BaseModel):
+    symbol: str
+    name: str
+    allocation_percent: float
+
+
+class ConcentrationRiskResponse(BaseModel):
+    risk_level: str
+    largest_position_percent: float
+    top_three_percent: float
+    concentrated_positions: List[
+        ConcentratedPositionResponse
+    ]
+    message: str
 
 
 class PortfolioResponse(BaseModel):
     summary: PortfolioSummaryResponse
     allocation: PortfolioAllocationResponse
+    concentration_risk: ConcentrationRiskResponse
     holdings: List[HoldingResponse]

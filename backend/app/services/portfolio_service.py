@@ -48,6 +48,98 @@ class PortfolioService:
         )
 
     @staticmethod
+    def calculate_concentration_risk(holdings: list[dict]):
+        priced_holdings = [
+            holding
+            for holding in holdings
+            if holding["current_value"] > 0
+        ]
+
+        if not priced_holdings:
+            return {
+                "risk_level": "unknown",
+                "largest_position_percent": 0.0,
+                "top_three_percent": 0.0,
+                "concentrated_positions": [],
+                "message": (
+                    "Concentration risk could not be calculated "
+                    "because no holdings have available prices."
+                ),
+            }
+
+        sorted_holdings = sorted(
+            priced_holdings,
+            key=lambda holding: holding[
+                "allocation_percent"
+            ],
+            reverse=True,
+        )
+
+        largest_position_percent = sorted_holdings[0][
+            "allocation_percent"
+        ]
+
+        top_three_percent = round(
+            sum(
+                holding["allocation_percent"]
+                for holding in sorted_holdings[:3]
+            ),
+            2,
+        )
+
+        concentrated_positions = [
+            {
+                "symbol": holding["symbol"],
+                "name": holding["name"],
+                "allocation_percent": holding[
+                    "allocation_percent"
+                ],
+            }
+            for holding in sorted_holdings
+            if holding["allocation_percent"] >= 20
+        ]
+
+        if (
+            largest_position_percent >= 35
+            or top_three_percent >= 75
+        ):
+            risk_level = "high"
+            message = (
+                "Your portfolio has high concentration risk. "
+                "A large portion of the portfolio is controlled "
+                "by one holding or the top three holdings."
+            )
+
+        elif (
+            largest_position_percent >= 25
+            or top_three_percent >= 60
+        ):
+            risk_level = "medium"
+            message = (
+                "Your portfolio has moderate concentration risk. "
+                "Monitor the largest positions and consider whether "
+                "the allocation matches your risk tolerance."
+            )
+
+        else:
+            risk_level = "low"
+            message = (
+                "Your portfolio has relatively low concentration "
+                "risk based on current holding allocations."
+            )
+
+        return {
+            "risk_level": risk_level,
+            "largest_position_percent": round(
+                largest_position_percent,
+                2,
+            ),
+            "top_three_percent": top_three_percent,
+            "concentrated_positions": concentrated_positions,
+            "message": message,
+        }
+
+    @staticmethod
     def calculate(db: Session):
         db_holdings = PortfolioRepository.get_holdings(db)
 
@@ -209,6 +301,12 @@ class PortfolioService:
                 ],
             }
 
+        concentration_risk = (
+            PortfolioService.calculate_concentration_risk(
+                holdings
+            )
+        )
+
         total_profit = total_value - total_cost
 
         total_return = (
@@ -238,12 +336,9 @@ class PortfolioService:
                 ),
             },
             "allocation": {
-                "by_asset_type": (
-                    asset_type_allocation
-                ),
-                "largest_holding": (
-                    largest_holding
-                ),
+                "by_asset_type": asset_type_allocation,
+                "largest_holding": largest_holding,
             },
+            "concentration_risk": concentration_risk,
             "holdings": holdings,
         }
