@@ -48,11 +48,13 @@ class PortfolioService:
         )
 
     @staticmethod
-    def calculate_concentration_risk(holdings: list[dict]):
+    def calculate_concentration_risk(
+        holdings: list[dict],
+    ):
         priced_holdings = [
             holding
             for holding in holdings
-            if holding["current_value"] > 0
+            if holding["price_status"] == "available"
         ]
 
         if not priced_holdings:
@@ -140,6 +142,262 @@ class PortfolioService:
         }
 
     @staticmethod
+    def calculate_performance_insights(
+        holdings: list[dict],
+    ):
+        priced_holdings = [
+            holding
+            for holding in holdings
+            if holding["price_status"] == "available"
+        ]
+
+        profitable_holdings = [
+            holding
+            for holding in priced_holdings
+            if holding["profit"] > 0
+        ]
+
+        losing_holdings = [
+            holding
+            for holding in priced_holdings
+            if holding["profit"] < 0
+        ]
+
+        breakeven_holdings = [
+            holding
+            for holding in priced_holdings
+            if holding["profit"] == 0
+        ]
+
+        if not priced_holdings:
+            return {
+                "top_performer": None,
+                "weakest_performer": None,
+                "largest_profit_contributor": None,
+                "largest_loss_contributor": None,
+                "profitable_holdings_count": 0,
+                "losing_holdings_count": 0,
+                "breakeven_holdings_count": 0,
+                "message": (
+                    "Performance insights could not be calculated "
+                    "because no holdings have available prices."
+                ),
+            }
+
+        top_performer = max(
+            priced_holdings,
+            key=lambda holding: holding[
+                "profit_percent"
+            ],
+        )
+
+        weakest_performer = min(
+            priced_holdings,
+            key=lambda holding: holding[
+                "profit_percent"
+            ],
+        )
+
+        largest_profit_contributor = None
+
+        if profitable_holdings:
+            largest_profit = max(
+                profitable_holdings,
+                key=lambda holding: holding["profit"],
+            )
+
+            largest_profit_contributor = {
+                "symbol": largest_profit["symbol"],
+                "name": largest_profit["name"],
+                "profit": largest_profit["profit"],
+                "profit_percent": largest_profit[
+                    "profit_percent"
+                ],
+            }
+
+        largest_loss_contributor = None
+
+        if losing_holdings:
+            largest_loss = min(
+                losing_holdings,
+                key=lambda holding: holding["profit"],
+            )
+
+            largest_loss_contributor = {
+                "symbol": largest_loss["symbol"],
+                "name": largest_loss["name"],
+                "profit": largest_loss["profit"],
+                "profit_percent": largest_loss[
+                    "profit_percent"
+                ],
+            }
+
+        return {
+            "top_performer": {
+                "symbol": top_performer["symbol"],
+                "name": top_performer["name"],
+                "profit": top_performer["profit"],
+                "profit_percent": top_performer[
+                    "profit_percent"
+                ],
+            },
+            "weakest_performer": {
+                "symbol": weakest_performer["symbol"],
+                "name": weakest_performer["name"],
+                "profit": weakest_performer["profit"],
+                "profit_percent": weakest_performer[
+                    "profit_percent"
+                ],
+            },
+            "largest_profit_contributor": (
+                largest_profit_contributor
+            ),
+            "largest_loss_contributor": (
+                largest_loss_contributor
+            ),
+            "profitable_holdings_count": len(
+                profitable_holdings
+            ),
+            "losing_holdings_count": len(
+                losing_holdings
+            ),
+            "breakeven_holdings_count": len(
+                breakeven_holdings
+            ),
+            "message": (
+                f"{len(profitable_holdings)} holdings are profitable, "
+                f"{len(losing_holdings)} are currently at a loss, "
+                f"and {len(breakeven_holdings)} are near break-even."
+            ),
+        }
+
+    @staticmethod
+    def calculate_health_score(
+        holdings: list[dict],
+        concentration_risk: dict,
+        performance_insights: dict,
+    ):
+        total_holdings = len(holdings)
+
+        priced_holdings = [
+            holding
+            for holding in holdings
+            if holding["price_status"] == "available"
+        ]
+
+        priced_count = len(priced_holdings)
+
+        # Diversification score: maximum 25 points.
+        if total_holdings >= 10:
+            diversification_score = 25
+        elif total_holdings >= 7:
+            diversification_score = 20
+        elif total_holdings >= 5:
+            diversification_score = 15
+        elif total_holdings >= 3:
+            diversification_score = 10
+        elif total_holdings >= 1:
+            diversification_score = 5
+        else:
+            diversification_score = 0
+
+        # Concentration score: maximum 25 points.
+        risk_level = concentration_risk.get(
+            "risk_level",
+            "unknown",
+        )
+
+        concentration_scores = {
+            "low": 25,
+            "medium": 15,
+            "high": 5,
+            "unknown": 0,
+        }
+
+        concentration_score = concentration_scores.get(
+            risk_level,
+            0,
+        )
+
+        # Profitability score: maximum 25 points.
+        profitable_count = performance_insights.get(
+            "profitable_holdings_count",
+            0,
+        )
+
+        profitability_ratio = (
+            profitable_count / priced_count
+            if priced_count > 0
+            else 0.0
+        )
+
+        profitability_score = round(
+            profitability_ratio * 25,
+            2,
+        )
+
+        # Pricing coverage score: maximum 25 points.
+        pricing_coverage_ratio = (
+            priced_count / total_holdings
+            if total_holdings > 0
+            else 0.0
+        )
+
+        pricing_coverage_score = round(
+            pricing_coverage_ratio * 25,
+            2,
+        )
+
+        total_score = round(
+            diversification_score
+            + concentration_score
+            + profitability_score
+            + pricing_coverage_score,
+            2,
+        )
+
+        if total_score >= 85:
+            rating = "excellent"
+            message = (
+                "Your portfolio has strong overall health based on "
+                "diversification, concentration, profitability, and "
+                "pricing coverage."
+            )
+
+        elif total_score >= 70:
+            rating = "good"
+            message = (
+                "Your portfolio is in good condition, with some room "
+                "to improve diversification or concentration risk."
+            )
+
+        elif total_score >= 50:
+            rating = "fair"
+            message = (
+                "Your portfolio has fair overall health. Review "
+                "concentration, losing positions, and diversification."
+            )
+
+        else:
+            rating = "weak"
+            message = (
+                "Your portfolio health score is currently weak. "
+                "Several risk or data-quality areas may need attention."
+            )
+
+        return {
+            "score": total_score,
+            "rating": rating,
+            "components": {
+                "diversification_score": diversification_score,
+                "concentration_score": concentration_score,
+                "profitability_score": profitability_score,
+                "pricing_coverage_score": pricing_coverage_score,
+            },
+            "message": message,
+        }
+        
+    @staticmethod
     def calculate(db: Session):
         db_holdings = PortfolioRepository.get_holdings(db)
 
@@ -187,7 +445,6 @@ class PortfolioService:
                 continue
 
             priced_holdings_count += 1
-
             current_price = float(current_price)
 
             value = quantity * current_price
@@ -279,7 +536,7 @@ class PortfolioService:
         priced_holdings = [
             holding
             for holding in holdings
-            if holding["current_value"] > 0
+            if holding["price_status"] == "available"
         ]
 
         if priced_holdings:
@@ -306,6 +563,20 @@ class PortfolioService:
                 holdings
             )
         )
+
+        performance_insights = (
+            PortfolioService.calculate_performance_insights(
+                holdings
+            )
+        )
+        
+        health_score = (
+            PortfolioService.calculate_health_score(
+                holdings,
+                concentration_risk,
+                performance_insights,
+            )
+        )       
 
         total_profit = total_value - total_cost
 
@@ -340,5 +611,7 @@ class PortfolioService:
                 "largest_holding": largest_holding,
             },
             "concentration_risk": concentration_risk,
+            "performance_insights": performance_insights,
+            "health_score": health_score,            
             "holdings": holdings,
         }

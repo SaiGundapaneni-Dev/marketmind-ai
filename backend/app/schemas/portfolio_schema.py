@@ -84,8 +84,45 @@ class ConcentrationRiskResponse(BaseModel):
     message: str
 
 
+class PerformerResponse(BaseModel):
+    symbol: str
+    name: str
+    profit: float
+    profit_percent: float
+
+
+class PerformanceInsightsResponse(BaseModel):
+    top_performer: Optional[PerformerResponse] = None
+    weakest_performer: Optional[PerformerResponse] = None
+    largest_profit_contributor: Optional[
+        PerformerResponse
+    ] = None
+    largest_loss_contributor: Optional[
+        PerformerResponse
+    ] = None
+    profitable_holdings_count: int
+    losing_holdings_count: int
+    breakeven_holdings_count: int
+    message: str
+    
+class HealthScoreComponentsResponse(BaseModel):
+    diversification_score: float
+    concentration_score: float
+    profitability_score: float
+    pricing_coverage_score: float
+
+
+class PortfolioHealthScoreResponse(BaseModel):
+    score: float
+    rating: str
+    components: HealthScoreComponentsResponse
+    message: str
+    
 class PortfolioResponse(BaseModel):
     summary: PortfolioSummaryResponse
     allocation: PortfolioAllocationResponse
     concentration_risk: ConcentrationRiskResponse
+    performance_insights: PerformanceInsightsResponse
+    health_score: PortfolioHealthScoreResponse
     holdings: List[HoldingResponse]
+    
