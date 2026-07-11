@@ -118,11 +118,24 @@ class PortfolioHealthScoreResponse(BaseModel):
     components: HealthScoreComponentsResponse
     message: str
     
+class ActionableInsightResponse(BaseModel):
+    category: str
+    severity: str
+    title: str
+    message: str
+
+
+class ActionableInsightsResponse(BaseModel):
+    count: int
+    items: List[ActionableInsightResponse]
+    disclaimer: str
+    
 class PortfolioResponse(BaseModel):
     summary: PortfolioSummaryResponse
     allocation: PortfolioAllocationResponse
     concentration_risk: ConcentrationRiskResponse
     performance_insights: PerformanceInsightsResponse
     health_score: PortfolioHealthScoreResponse
+    actionable_insights: ActionableInsightsResponse
     holdings: List[HoldingResponse]
     

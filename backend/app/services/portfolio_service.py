@@ -398,6 +398,204 @@ class PortfolioService:
         }
         
     @staticmethod
+    def generate_actionable_insights(
+        holdings: list[dict],
+        allocation: dict,
+        concentration_risk: dict,
+        performance_insights: dict,
+        health_score: dict,
+    ):
+        insights = []
+
+        risk_level = concentration_risk.get(
+            "risk_level",
+            "unknown",
+        )
+
+        largest_holding = allocation.get(
+            "largest_holding"
+        )
+
+        if risk_level == "high":
+            insights.append({
+                "category": "concentration",
+                "severity": "high",
+                "title": "High concentration risk",
+                "message": (
+                    "A large percentage of your portfolio is "
+                    "concentrated in one holding or the top three "
+                    "holdings. Review whether this exposure matches "
+                    "your risk tolerance."
+                ),
+            })
+
+        elif risk_level == "medium":
+            insights.append({
+                "category": "concentration",
+                "severity": "medium",
+                "title": "Moderate concentration risk",
+                "message": (
+                    "Your portfolio has moderate concentration. "
+                    "Monitor your largest positions as their price "
+                    "movements may significantly affect total returns."
+                ),
+            })
+
+        elif risk_level == "low":
+            insights.append({
+                "category": "concentration",
+                "severity": "low",
+                "title": "Balanced position sizes",
+                "message": (
+                    "No single holding currently creates excessive "
+                    "concentration based on the configured thresholds."
+                ),
+            })
+
+        if largest_holding:
+            insights.append({
+                "category": "allocation",
+                "severity": (
+                    "medium"
+                    if largest_holding[
+                        "allocation_percent"
+                    ] >= 20
+                    else "low"
+                ),
+                "title": (
+                    f"{largest_holding['symbol']} is your "
+                    "largest holding"
+                ),
+                "message": (
+                    f"{largest_holding['symbol']} represents "
+                    f"{largest_holding['allocation_percent']:.2f}% "
+                    "of your current portfolio value."
+                ),
+            })
+
+        top_performer = performance_insights.get(
+            "top_performer"
+        )
+
+        if top_performer:
+            insights.append({
+                "category": "performance",
+                "severity": "low",
+                "title": (
+                    f"{top_performer['symbol']} is your "
+                    "top performer"
+                ),
+                "message": (
+                    f"{top_performer['symbol']} has returned "
+                    f"{top_performer['profit_percent']:.2f}% "
+                    f"and contributed "
+                    f"${top_performer['profit']:.2f} in profit."
+                ),
+            })
+
+        largest_profit = performance_insights.get(
+            "largest_profit_contributor"
+        )
+
+        if largest_profit:
+            insights.append({
+                "category": "performance",
+                "severity": "low",
+                "title": "Largest profit contributor",
+                "message": (
+                    f"{largest_profit['symbol']} currently "
+                    f"contributes the most dollar profit at "
+                    f"${largest_profit['profit']:.2f}."
+                ),
+            })
+
+        largest_loss = performance_insights.get(
+            "largest_loss_contributor"
+        )
+
+        if largest_loss:
+            insights.append({
+                "category": "performance",
+                "severity": "medium",
+                "title": "Largest loss contributor",
+                "message": (
+                    f"{largest_loss['symbol']} currently has "
+                    f"the largest unrealized loss at "
+                    f"${largest_loss['profit']:.2f}, or "
+                    f"{largest_loss['profit_percent']:.2f}%."
+                ),
+            })
+
+        unpriced_holdings = [
+            holding
+            for holding in holdings
+            if holding["price_status"] == "unavailable"
+        ]
+
+        if unpriced_holdings:
+            symbols = ", ".join(
+                holding["symbol"]
+                for holding in unpriced_holdings
+            )
+
+            insights.append({
+                "category": "data_quality",
+                "severity": "high",
+                "title": "Missing live prices",
+                "message": (
+                    f"Live prices are unavailable for: {symbols}. "
+                    "Portfolio value and risk calculations may be "
+                    "incomplete."
+                ),
+            })
+
+        score = health_score.get("score", 0)
+        rating = health_score.get("rating", "unknown")
+
+        insights.append({
+            "category": "health",
+            "severity": (
+                "low"
+                if score >= 70
+                else "medium"
+                if score >= 50
+                else "high"
+            ),
+            "title": (
+                f"Portfolio health rating: "
+                f"{rating.title()}"
+            ),
+            "message": (
+                f"Your portfolio health score is "
+                f"{score:.2f}/100. The score reflects "
+                "diversification, concentration, profitability, "
+                "and price-data coverage."
+            ),
+        })
+
+        severity_order = {
+            "high": 0,
+            "medium": 1,
+            "low": 2,
+        }
+
+        insights.sort(
+            key=lambda insight: severity_order.get(
+                insight["severity"],
+                3,
+            )
+        )
+
+        return {
+            "count": len(insights),
+            "items": insights,
+            "disclaimer": (
+                "These insights are informational and are not "
+                "personalized financial advice."
+            ),
+        }
+        
+    @staticmethod
     def calculate(db: Session):
         db_holdings = PortfolioRepository.get_holdings(db)
 
@@ -576,7 +774,22 @@ class PortfolioService:
                 concentration_risk,
                 performance_insights,
             )
-        )       
+        )      
+
+        allocation = {
+            "by_asset_type": asset_type_allocation,
+            "largest_holding": largest_holding,
+        }
+
+        actionable_insights = (
+            PortfolioService.generate_actionable_insights(
+                holdings,
+                allocation,
+                concentration_risk,
+                performance_insights,
+                health_score,
+            )
+        )        
 
         total_profit = total_value - total_cost
 
@@ -606,12 +819,11 @@ class PortfolioService:
                     unpriced_holdings_count
                 ),
             },
-            "allocation": {
-                "by_asset_type": asset_type_allocation,
-                "largest_holding": largest_holding,
-            },
+
+            "allocation": allocation,            
             "concentration_risk": concentration_risk,
             "performance_insights": performance_insights,
-            "health_score": health_score,            
+            "health_score": health_score,
+            "actionable_insights": actionable_insights,
             "holdings": holdings,
         }
