@@ -10,14 +10,20 @@ export type Holding = {
   name: string;
   quantity: number;
   average_price: number;
-  current_price: number;
+  current_price: number | null;
   cost: number;
   current_value: number;
   profit: number;
   profit_percent: number;
+  allocation_percent: number;
+  price_status: string;
 };
 
-function formatMoney(value: number) {
+function formatMoney(value: number | null) {
+  if (value === null) {
+    return "Unavailable";
+  }
+
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
@@ -33,10 +39,17 @@ export default function HoldingsTable({
 }) {
   const router = useRouter();
 
-  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [deletingId, setDeletingId] =
+    useState<number | null>(null);
   const [message, setMessage] = useState("");
 
-  async function deleteHolding(holding: Holding) {
+  const apiBaseUrl =
+    process.env.NEXT_PUBLIC_API_BASE_URL ??
+    "http://127.0.0.1:8000";
+
+  async function deleteHolding(
+    holding: Holding
+  ) {
     const confirmed = window.confirm(
       `Are you sure you want to delete ${holding.symbol}?`
     );
@@ -50,22 +63,29 @@ export default function HoldingsTable({
 
     try {
       const response = await fetch(
-        `http://127.0.0.1:8000/portfolio/holdings/${holding.id}`,
+        `${apiBaseUrl}/portfolio/holdings/${holding.id}`,
         {
           method: "DELETE",
         }
       );
 
       if (!response.ok) {
-        setMessage(`Failed to delete ${holding.symbol}.`);
+        setMessage(
+          `Failed to delete ${holding.symbol}.`
+        );
         return;
       }
 
-      setMessage(`${holding.symbol} deleted successfully.`);
+      setMessage(
+        `${holding.symbol} deleted successfully.`
+      );
 
-      router.refresh();
+      window.location.reload();
     } catch (error) {
-      console.error("Delete holding error:", error);
+      console.error(
+        "Delete holding error:",
+        error
+      );
 
       setMessage(
         "Unable to connect to the MarketMind API."
@@ -77,17 +97,14 @@ export default function HoldingsTable({
 
   return (
     <div className="mt-8 rounded-2xl border border-slate-800 bg-slate-900 p-5">
-
       <h2 className="text-xl font-semibold">
         Holdings
       </h2>
 
       <p className="mt-1 text-sm text-slate-400">
-        Live portfolio holdings from the MarketMind API.
+        Live portfolio holdings from the MarketMind
+        API.
       </p>
-
-
-      {/* Status Message */}
 
       {message && (
         <p className="mt-4 text-sm text-slate-300">
@@ -95,36 +112,24 @@ export default function HoldingsTable({
         </p>
       )}
 
-
-      {/* Empty Portfolio State */}
-
       {holdings.length === 0 && (
         <div className="mt-5 rounded-xl border border-slate-800 bg-slate-950 p-6 text-center">
-
           <h3 className="font-semibold text-white">
             Your portfolio is empty
           </h3>
 
           <p className="mt-2 text-sm text-slate-400">
-            Add your first US stock using the Add Holding form above.
+            Add your first US stock using the Add
+            Holding form above.
           </p>
-
         </div>
       )}
 
-
-      {/* Holdings Table */}
-
       {holdings.length > 0 && (
-
         <div className="mt-5 overflow-x-auto">
-
-          <table className="w-full min-w-[1000px] text-left text-sm">
-
+          <table className="w-full min-w-[1150px] text-left text-sm">
             <thead className="border-b border-slate-800 text-slate-400">
-
               <tr>
-
                 <th className="py-3 pr-4">
                   Symbol
                 </th>
@@ -154,6 +159,10 @@ export default function HoldingsTable({
                 </th>
 
                 <th className="py-3 pr-4">
+                  Allocation
+                </th>
+
+                <th className="py-3 pr-4">
                   P/L
                 </th>
 
@@ -164,21 +173,15 @@ export default function HoldingsTable({
                 <th className="py-3">
                   Actions
                 </th>
-
               </tr>
-
             </thead>
 
-
             <tbody>
-
               {holdings.map((holding) => (
-
                 <tr
                   key={holding.id}
                   className="border-b border-slate-800 last:border-0"
                 >
-
                   <td className="py-4 pr-4 font-semibold">
                     {holding.symbol}
                   </td>
@@ -214,20 +217,36 @@ export default function HoldingsTable({
                   </td>
 
                   <td className="py-4 pr-4">
-                    {formatMoney(
-                      holding.profit
+                    {holding.allocation_percent.toFixed(
+                      2
                     )}
+                    %
                   </td>
 
-                  <td className="py-4 pr-4">
-                    {holding.profit_percent.toFixed(2)}%
+                  <td
+                    className={`py-4 pr-4 ${
+                      holding.profit >= 0
+                        ? "text-emerald-300"
+                        : "text-red-300"
+                    }`}
+                  >
+                    {formatMoney(holding.profit)}
                   </td>
 
-
-                  {/* Delete Action */}
+                  <td
+                    className={`py-4 pr-4 ${
+                      holding.profit_percent >= 0
+                        ? "text-emerald-300"
+                        : "text-red-300"
+                    }`}
+                  >
+                    {holding.profit_percent.toFixed(
+                      2
+                    )}
+                    %
+                  </td>
 
                   <td className="py-4">
-
                     <button
                       onClick={() =>
                         deleteHolding(holding)
@@ -237,27 +256,17 @@ export default function HoldingsTable({
                       }
                       className="rounded-lg border border-red-500/30 px-3 py-2 text-red-400 transition hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50"
                     >
-
                       {deletingId === holding.id
                         ? "Deleting..."
                         : "Delete"}
-
                     </button>
-
                   </td>
-
                 </tr>
-
               ))}
-
             </tbody>
-
           </table>
-
         </div>
-
       )}
-
     </div>
   );
 }
