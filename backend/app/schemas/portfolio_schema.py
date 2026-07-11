@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -13,19 +13,6 @@ class HoldingCreate(BaseModel):
     portfolio_id: int
 
 
-class HoldingResponse(BaseModel):
-    id: int
-    asset_type: str
-    symbol: str
-    name: str
-    quantity: float
-    average_price: float
-    current_price: float
-    cost: float
-    current_value: float
-    profit: float
-    profit_percent: float
-
 class HoldingUpdate(BaseModel):
     asset_type: str
     symbol: str
@@ -34,13 +21,52 @@ class HoldingUpdate(BaseModel):
     average_price: float = Field(gt=0)
     currency: str
 
+
+class HoldingResponse(BaseModel):
+    id: int
+    asset_type: str
+    symbol: str
+    name: str
+    quantity: float
+    average_price: float
+    current_price: Optional[float] = None
+    cost: float
+    current_value: float
+    profit: float
+    profit_percent: float
+    allocation_percent: float
+    price_status: str
+
+
 class PortfolioSummaryResponse(BaseModel):
     total_cost: float
     total_value: float
     total_profit: float
     total_return_percent: float
+    holdings_count: int
+    priced_holdings_count: int
+    unpriced_holdings_count: int
+
+
+class AssetTypeAllocationResponse(BaseModel):
+    asset_type: str
+    value: float
+    allocation_percent: float
+
+
+class LargestHoldingResponse(BaseModel):
+    symbol: str
+    name: str
+    current_value: float
+    allocation_percent: float
+
+
+class PortfolioAllocationResponse(BaseModel):
+    by_asset_type: List[AssetTypeAllocationResponse]
+    largest_holding: Optional[LargestHoldingResponse] = None
 
 
 class PortfolioResponse(BaseModel):
     summary: PortfolioSummaryResponse
+    allocation: PortfolioAllocationResponse
     holdings: List[HoldingResponse]
