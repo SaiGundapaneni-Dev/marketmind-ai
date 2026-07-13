@@ -235,14 +235,43 @@ class CopilotService:
             "what should i change",
         }
 
+        diversification_terms = {
+            "diversified",
+            "diversification",
+            "well diversified",
+            "enough diversification",
+            "too concentrated",
+            "concentrated",
+            "concentration",
+            "spread out",
+            "balanced portfolio",
+        }
+
+        health_terms = {
+            "healthy",
+            "health",
+            "health score",
+            "portfolio health",
+            "why is my health score",
+            "explain my health score",
+            "score breakdown",
+            "overall score",
+        }
+
         if any(term in text for term in strength_terms):
             return "strengths"
 
-        if any(term in text for term in risk_terms):
-            return "risks"
-
         if any(term in text for term in recommendation_terms):
             return "recommendations"
+
+        if any(term in text for term in health_terms):
+            return "health"
+
+        if any(term in text for term in diversification_terms):
+            return "diversification"
+
+        if any(term in text for term in risk_terms):
+            return "risks"
 
         return "summary"
 
@@ -977,6 +1006,218 @@ class CopilotService:
         )
 
     @staticmethod
+    def build_portfolio_diversification(
+        portfolio: dict,
+    ) -> str:
+        summary = portfolio.get(
+            "summary",
+            {},
+        )
+
+        allocation = portfolio.get(
+            "allocation",
+            {},
+        )
+
+        concentration = portfolio.get(
+            "concentration_risk",
+            {},
+        )
+
+        health = portfolio.get(
+            "health_score",
+            {},
+        )
+
+        holdings_count = summary.get(
+            "holdings_count",
+            0,
+        )
+
+        allocation_by_asset_type = allocation.get(
+            "by_asset_type",
+            [],
+        )
+
+        largest_holding = allocation.get(
+            "largest_holding"
+        )
+
+        risk_level = concentration.get(
+            "risk_level",
+            "unknown",
+        )
+
+        top_three_percent = concentration.get(
+            "top_three_percent",
+            0,
+        )
+
+        components = health.get(
+            "components",
+            {},
+        )
+
+        diversification_score = components.get(
+            "diversification_score",
+            0,
+        )
+
+        asset_type_count = len(
+            allocation_by_asset_type
+        )
+
+        category_label = (
+            "category"
+            if asset_type_count == 1
+            else "categories"
+        )
+
+        parts = [
+            (
+                f"Your portfolio has {holdings_count} holdings "
+                f"across {asset_type_count} asset-type "
+                f"{category_label}."
+            ),
+            (
+                f"Your diversification score is "
+                f"{diversification_score:.2f}/25."
+            ),
+            (
+                f"Your concentration risk is {risk_level}, "
+                f"with the top three holdings representing "
+                f"{top_three_percent:.2f}% of portfolio value."
+            ),
+        ]
+
+        if largest_holding:
+            parts.append(
+                (
+                    f"{largest_holding.get('symbol')} is your "
+                    f"largest position at "
+                    f"{largest_holding.get('allocation_percent', 0):.2f}%."
+                )
+            )
+
+        if (
+            diversification_score >= 20
+            and risk_level == "low"
+        ):
+            conclusion = (
+                "Overall, the portfolio appears reasonably "
+                "diversified based on the current holdings and "
+                "concentration thresholds."
+            )
+
+        elif diversification_score >= 15:
+            conclusion = (
+                "Overall, the portfolio has moderate "
+                "diversification, but broader exposure could "
+                "reduce concentration risk."
+            )
+
+        else:
+            conclusion = (
+                "Overall, the portfolio has limited "
+                "diversification and may rely too heavily on "
+                "a small number of positions."
+            )
+
+        return (
+            " ".join(parts)
+            + " "
+            + conclusion
+            + " This assessment is informational and is not "
+            + "personalized financial advice."
+        )
+
+    @staticmethod
+    def build_portfolio_health(
+        portfolio: dict,
+    ) -> str:
+        health = portfolio.get(
+            "health_score",
+            {},
+        )
+
+        concentration = portfolio.get(
+            "concentration_risk",
+            {},
+        )
+
+        performance = portfolio.get(
+            "performance_insights",
+            {},
+        )
+
+        score = health.get(
+            "score",
+            0,
+        )
+
+        rating = health.get(
+            "rating",
+            "unknown",
+        )
+
+        components = health.get(
+            "components",
+            {},
+        )
+
+        diversification_score = components.get(
+            "diversification_score",
+            0,
+        )
+
+        concentration_score = components.get(
+            "concentration_score",
+            0,
+        )
+
+        profitability_score = components.get(
+            "profitability_score",
+            0,
+        )
+
+        pricing_coverage_score = components.get(
+            "pricing_coverage_score",
+            0,
+        )
+
+        profitable_count = performance.get(
+            "profitable_holdings_count",
+            0,
+        )
+
+        losing_count = performance.get(
+            "losing_holdings_count",
+            0,
+        )
+
+        risk_level = concentration.get(
+            "risk_level",
+            "unknown",
+        )
+
+        return (
+            f"Your portfolio health score is {score:.2f}/100, "
+            f"rated {str(rating).title()}. "
+            f"The score includes {diversification_score:.2f}/25 "
+            f"for diversification, {concentration_score:.2f}/25 "
+            f"for concentration, {profitability_score:.2f}/25 "
+            f"for profitability, and "
+            f"{pricing_coverage_score:.2f}/25 for live-price coverage. "
+            f"Your concentration risk is {risk_level}. "
+            f"{profitable_count} holdings are profitable and "
+            f"{losing_count} are currently at a loss. "
+            f"The main opportunities to improve the score are broader "
+            f"diversification and lower concentration in the largest "
+            f"positions. This assessment is informational and is not "
+            f"personalized financial advice."
+        )
+
+    @staticmethod
     def answer(
         question: str,
         db: Session,
@@ -1021,6 +1262,20 @@ class CopilotService:
             elif portfolio_question_type == "recommendations":
                 answer_text = (
                     CopilotService.build_portfolio_recommendations(
+                        portfolio
+                    )
+                )
+
+            elif portfolio_question_type == "diversification":
+                answer_text = (
+                    CopilotService.build_portfolio_diversification(
+                        portfolio
+                    )
+                )
+
+            elif portfolio_question_type == "health":
+                answer_text = (
+                    CopilotService.build_portfolio_health(
                         portfolio
                     )
                 )
