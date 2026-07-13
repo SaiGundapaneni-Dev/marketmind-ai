@@ -216,11 +216,33 @@ class CopilotService:
             "downside",
         }
 
+        recommendation_terms = {
+            "improve",
+            "improvement",
+            "recommend",
+            "recommendation",
+            "recommendations",
+            "suggest",
+            "suggestion",
+            "suggestions",
+            "what should i do",
+            "what should i focus on",
+            "focus on next",
+            "next step",
+            "how can i improve",
+            "how to improve",
+            "what can i change",
+            "what should i change",
+        }
+
         if any(term in text for term in strength_terms):
             return "strengths"
 
         if any(term in text for term in risk_terms):
             return "risks"
+
+        if any(term in text for term in recommendation_terms):
+            return "recommendations"
 
         return "summary"
 
@@ -783,6 +805,178 @@ class CopilotService:
         )
 
     @staticmethod
+    def build_portfolio_recommendations(
+        portfolio: dict,
+    ) -> str:
+        summary = portfolio.get("summary", {})
+        allocation = portfolio.get("allocation", {})
+        concentration = portfolio.get(
+            "concentration_risk",
+            {},
+        )
+        performance = portfolio.get(
+            "performance_insights",
+            {},
+        )
+        health = portfolio.get(
+            "health_score",
+            {},
+        )
+
+        holdings_count = summary.get(
+            "holdings_count",
+            0,
+        )
+
+        unpriced_count = summary.get(
+            "unpriced_holdings_count",
+            0,
+        )
+
+        largest_holding = allocation.get(
+            "largest_holding"
+        )
+
+        risk_level = concentration.get(
+            "risk_level",
+            "unknown",
+        )
+
+        top_three_percent = concentration.get(
+            "top_three_percent",
+            0,
+        )
+
+        losing_count = performance.get(
+            "losing_holdings_count",
+            0,
+        )
+
+        largest_loss = performance.get(
+            "largest_loss_contributor"
+        )
+
+        health_score = health.get(
+            "score",
+            0,
+        )
+
+        components = health.get(
+            "components",
+            {},
+        )
+
+        diversification_score = components.get(
+            "diversification_score",
+            0,
+        )
+
+        profitability_score = components.get(
+            "profitability_score",
+            0,
+        )
+
+        recommendations = []
+
+        if risk_level in {"medium", "high"}:
+            recommendations.append(
+                (
+                    f"Review your position sizing because the top three "
+                    f"holdings represent {top_three_percent:.2f}% of "
+                    "the portfolio."
+                )
+            )
+
+        if largest_holding:
+            largest_percent = largest_holding.get(
+                "allocation_percent",
+                0,
+            )
+
+            if largest_percent >= 20:
+                recommendations.append(
+                    (
+                        f"Monitor {largest_holding.get('symbol')} closely "
+                        f"because it represents {largest_percent:.2f}% "
+                        "of total portfolio value."
+                    )
+                )
+
+        if diversification_score < 20:
+            recommendations.append(
+                (
+                    f"Consider broader diversification. Your "
+                    f"diversification score is "
+                    f"{diversification_score:.2f}/25 across "
+                    f"{holdings_count} holdings."
+                )
+            )
+
+        if losing_count > 0:
+            recommendations.append(
+                (
+                    f"Review the investment thesis for your "
+                    f"{losing_count} losing holdings instead of relying "
+                    "only on short-term price movement."
+                )
+            )
+
+        if largest_loss:
+            loss_amount = abs(
+                largest_loss.get("profit", 0)
+            )
+
+            recommendations.append(
+                (
+                    f"Pay particular attention to "
+                    f"{largest_loss.get('symbol')}, currently the "
+                    f"largest unrealized loss contributor at "
+                    f"-${loss_amount:,.2f}."
+                )
+            )
+
+        if profitability_score < 20:
+            recommendations.append(
+                (
+                    f"Only part of the portfolio is currently profitable. "
+                    f"Your profitability component is "
+                    f"{profitability_score:.2f}/25, so review which "
+                    "holdings are contributing positively and negatively."
+                )
+            )
+
+        if health_score < 85:
+            recommendations.append(
+                (
+                    f"Focus on improving diversification and reducing "
+                    f"concentration to raise the portfolio health score "
+                    f"from {health_score:.2f}/100."
+                )
+            )
+
+        if unpriced_count > 0:
+            recommendations.append(
+                (
+                    f"Resolve missing live-price coverage for "
+                    f"{unpriced_count} holdings before making portfolio "
+                    "decisions based on the current analytics."
+                )
+            )
+
+        if not recommendations:
+            return (
+                "Your portfolio does not currently show any major areas "
+                "requiring improvement based on the available data."
+            )
+
+        return (
+            "Here are the main areas to improve: "
+            + " ".join(recommendations)
+            + " These suggestions are informational and are not "
+            "personalized financial advice."
+        )
+
+    @staticmethod
     def answer(
         question: str,
         db: Session,
@@ -820,6 +1014,13 @@ class CopilotService:
             elif portfolio_question_type == "risks":
                 answer_text = (
                     CopilotService.build_portfolio_risks(
+                        portfolio
+                    )
+                )
+
+            elif portfolio_question_type == "recommendations":
+                answer_text = (
+                    CopilotService.build_portfolio_recommendations(
                         portfolio
                     )
                 )
