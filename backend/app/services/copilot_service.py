@@ -197,8 +197,30 @@ class CopilotService:
             "strongest",
         }
 
+        risk_terms = {
+            "risk",
+            "risks",
+            "risky",
+            "biggest risk",
+            "main risk",
+            "concern",
+            "concerns",
+            "concerned",
+            "what is wrong",
+            "what's wrong",
+            "weakness",
+            "weaknesses",
+            "problem",
+            "problems",
+            "danger",
+            "downside",
+        }
+
         if any(term in text for term in strength_terms):
             return "strengths"
+
+        if any(term in text for term in risk_terms):
+            return "risks"
 
         return "summary"
 
@@ -580,6 +602,187 @@ class CopilotService:
         )
 
     @staticmethod
+    def build_portfolio_risks(
+        portfolio: dict,
+    ) -> str:
+        summary = portfolio.get("summary", {})
+
+        allocation = portfolio.get(
+            "allocation",
+            {},
+        )
+
+        concentration = portfolio.get(
+            "concentration_risk",
+            {},
+        )
+
+        performance = portfolio.get(
+            "performance_insights",
+            {},
+        )
+
+        health = portfolio.get(
+            "health_score",
+            {},
+        )
+
+        holdings_count = summary.get(
+            "holdings_count",
+            0,
+        )
+
+        unpriced_count = summary.get(
+            "unpriced_holdings_count",
+            0,
+        )
+
+        largest_holding = allocation.get(
+            "largest_holding"
+        )
+
+        risk_level = concentration.get(
+            "risk_level",
+            "unknown",
+        )
+
+        top_three_percent = concentration.get(
+            "top_three_percent",
+            0,
+        )
+
+        losing_count = performance.get(
+            "losing_holdings_count",
+            0,
+        )
+
+        weakest_performer = performance.get(
+            "weakest_performer"
+        )
+
+        largest_loss = performance.get(
+            "largest_loss_contributor"
+        )
+
+        health_score = health.get(
+            "score",
+            0,
+        )
+
+        components = health.get(
+            "components",
+            {},
+        )
+
+        diversification_score = components.get(
+            "diversification_score",
+            0,
+        )
+
+        risks = []
+
+        if risk_level in {"medium", "high"}:
+            risks.append(
+                (
+                    f"Your portfolio has {risk_level} concentration "
+                    f"risk, with the top three holdings representing "
+                    f"{top_three_percent:.2f}% of total portfolio value."
+                )
+            )
+
+        if largest_holding:
+            allocation_percent = largest_holding.get(
+                "allocation_percent",
+                0,
+            )
+
+            if allocation_percent >= 20:
+                risks.append(
+                    (
+                        f"{largest_holding.get('symbol')} is your "
+                        f"largest holding at {allocation_percent:.2f}%, "
+                        "so a large price movement in this stock could "
+                        "significantly affect the portfolio."
+                    )
+                )
+
+        if losing_count > 0:
+            risks.append(
+                (
+                    f"{losing_count} of your {holdings_count} holdings "
+                    "are currently trading below their average cost."
+                )
+            )
+
+        if largest_loss:
+            loss_amount = abs(
+                largest_loss.get("profit", 0)
+            )
+
+            risks.append(
+                (
+                    f"{largest_loss.get('symbol')} is currently your "
+                    f"largest unrealized loss contributor at "
+                    f"-${loss_amount:,.2f}, or "
+                    f"{largest_loss.get('profit_percent', 0):.2f}%."
+                )
+            )
+
+        if (
+            weakest_performer
+            and largest_loss
+            and weakest_performer.get("symbol")
+            != largest_loss.get("symbol")
+        ):
+            risks.append(
+                (
+                    f"{weakest_performer.get('symbol')} has the weakest "
+                    f"percentage return at "
+                    f"{weakest_performer.get('profit_percent', 0):.2f}%."
+                )
+            )
+
+        if diversification_score < 20:
+            risks.append(
+                (
+                    f"Your diversification component is only "
+                    f"{diversification_score:.2f}/25, indicating that "
+                    "the portfolio may benefit from broader exposure."
+                )
+            )
+
+        if health_score < 70:
+            risks.append(
+                (
+                    f"Your portfolio health score is "
+                    f"{health_score:.2f}/100, which indicates several "
+                    "areas may need attention."
+                )
+            )
+
+        if unpriced_count > 0:
+            risks.append(
+                (
+                    f"{unpriced_count} holdings do not currently have "
+                    "live pricing, so portfolio calculations may be "
+                    "incomplete."
+                )
+            )
+
+        if not risks:
+            return (
+                "No major portfolio risks were detected from the "
+                "currently available holdings and pricing data."
+            )
+
+        return (
+            "The main risks in your portfolio are: "
+            + " ".join(risks)
+            + " These observations are informational and are not "
+            "personalized financial advice."
+        )
+
+    @staticmethod
     def answer(
         question: str,
         db: Session,
@@ -613,6 +816,14 @@ class CopilotService:
                         portfolio
                     )
                 )
+
+            elif portfolio_question_type == "risks":
+                answer_text = (
+                    CopilotService.build_portfolio_risks(
+                        portfolio
+                    )
+                )
+
             else:
                 answer_text = (
                     CopilotService.build_portfolio_summary(
