@@ -8,6 +8,7 @@ import HoldingsTable, {
 } from "@/components/HoldingsTable";
 import AddHoldingForm from "@/components/AddHoldingForm";
 import AllocationChart from "@/components/AllocationChart";
+import PortfolioTimeline from "@/components/PortfolioTimeline";
 
 type PortfolioSummary = {
   total_cost: number;
@@ -329,7 +330,7 @@ export default function Home() {
     return (
       <main className="flex min-h-screen items-center justify-center bg-slate-950 text-white">
         <p className="text-slate-400">
-          Loading MarketMind AI...
+          Loading Vestora AI...
         </p>
       </main>
     );
@@ -340,7 +341,7 @@ export default function Home() {
       <main className="flex min-h-screen items-center justify-center bg-slate-950 text-white">
         <div className="rounded-2xl border border-slate-800 bg-slate-900 p-8 text-center">
           <h1 className="text-2xl font-bold">
-            MarketMind AI
+            Vestora AI
           </h1>
 
           <p className="mt-3 text-slate-400">
@@ -415,6 +416,8 @@ export default function Home() {
               value={`${summary.holdings_count}`}
             />
           </div>
+
+          <PortfolioTimeline />
 
           <section className="mt-8 grid gap-5 lg:grid-cols-3">
             <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
@@ -574,7 +577,7 @@ export default function Home() {
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-medium text-blue-400">
-                  MarketMind Insights
+                  Vestora Insights
                 </p>
 
                 <h2 className="mt-1 text-xl font-semibold">
