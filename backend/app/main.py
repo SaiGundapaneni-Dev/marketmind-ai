@@ -1,11 +1,13 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
 from app.api.copilot import router as copilot_router
-from app.api.sec import router as sec_router
 from app.api.ipo import router as ipo_router
 from app.api.news import router as news_router
-from app.api.stocks import router as stocks_router
-from fastapi.middleware.cors import CORSMiddleware
 from app.api.portfolio import router as portfolio_router
+from app.api.sec import router as sec_router
+from app.api.stocks import router as stocks_router
+from app.api.watchlist import router as watchlist_router
 from app.core.config import settings
 from app.core.exceptions import global_exception_handler
 from app.core.logger import setup_logger
@@ -13,21 +15,18 @@ from app.core.logger import setup_logger
 
 logger = setup_logger()
 
-
 app = FastAPI(
     title=settings.app_name,
-    version=settings.app_version
+    version=settings.app_version,
 )
 
 app.include_router(news_router)
-
 app.include_router(stocks_router)
-
 app.include_router(ipo_router)
-
 app.include_router(sec_router)
-
 app.include_router(copilot_router)
+app.include_router(portfolio_router)
+app.include_router(watchlist_router)
 
 app.add_middleware(
     CORSMiddleware,
@@ -37,13 +36,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.add_exception_handler(
-    Exception,
-    global_exception_handler
-)
-
-
-app.include_router(portfolio_router)
+app.add_exception_handler(Exception, global_exception_handler)
 
 
 @app.get("/")
@@ -52,5 +45,5 @@ def home():
 
     return {
         "message": f"Welcome to {settings.app_name}",
-        "environment": settings.environment
+        "environment": settings.environment,
     }
