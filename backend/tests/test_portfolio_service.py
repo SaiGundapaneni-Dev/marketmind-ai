@@ -4,10 +4,12 @@ from app.services.portfolio_service import PortfolioService
 
 
 @patch(
-    "app.services.portfolio_service.PortfolioRepository.get_holdings"
+    "app.services.portfolio_calculation_service."
+    "PortfolioRepository.get_holdings"
 )
 @patch(
-    "app.services.portfolio_service.PriceService.get_live_price"
+    "app.services.portfolio_calculation_service."
+    "PriceService.get_live_price"
 )
 def test_calculate_portfolio(
     mock_price,
@@ -15,55 +17,75 @@ def test_calculate_portfolio(
 ):
     mock_price.return_value = 200.0
 
-    mock_holding = MagicMock()
-    mock_holding.id = 1
-    mock_holding.asset_type = "US"
-    mock_holding.symbol = "AAPL"
-    mock_holding.name = "Apple"
-    mock_holding.quantity = 2
-    mock_holding.average_price = 100.0
+    holding = MagicMock()
+    holding.id = 1
+    holding.asset_type = "US"
+    holding.symbol = "AAPL"
+    holding.name = "Apple"
+    holding.quantity = 2
+    holding.average_price = 100.0
 
-    mock_get_holdings.return_value = [
-        mock_holding
-    ]
+    mock_get_holdings.return_value = [holding]
 
-    mock_db = MagicMock()
-
-    result = PortfolioService.calculate(
-        mock_db
-    )
+    result = PortfolioService.calculate(MagicMock())
 
     assert result["summary"]["total_cost"] == 200.0
     assert result["summary"]["total_value"] == 400.0
     assert result["summary"]["total_profit"] == 200.0
-    assert (
-        result["summary"]["total_return_percent"]
-        == 100.0
-    )
-
+    assert result["summary"]["total_return_percent"] == 100.0
     assert result["summary"]["holdings_count"] == 1
-    assert (
-        result["summary"]["priced_holdings_count"]
-        == 1
-    )
-    assert (
-        result["summary"]["unpriced_holdings_count"]
-        == 0
-    )
+    assert result["summary"]["priced_holdings_count"] == 1
+    assert result["summary"]["unpriced_holdings_count"] == 0
 
-    assert len(result["holdings"]) == 1
+    item = result["holdings"][0]
 
-    holding = result["holdings"][0]
+    assert item["symbol"] == "AAPL"
+    assert item["current_price"] == 200.0
+    assert item["current_value"] == 400.0
+    assert item["profit"] == 200.0
+    assert item["profit_percent"] == 100.0
+    assert item["allocation_percent"] == 100.0
+    assert item["price_status"] == "available"
 
-    assert holding["symbol"] == "AAPL"
-    assert holding["current_price"] == 200.0
-    assert holding["current_value"] == 400.0
-    assert holding["profit"] == 200.0
-    assert holding["profit_percent"] == 100.0
-    assert holding["allocation_percent"] == 100.0
-    assert holding["price_status"] == "available"
+    assert result["concentration_risk"]["risk_level"] == "high"
+    assert result["performance_insights"][
+        "top_performer"
+    ]["symbol"] == "AAPL"
+    assert result["health_score"]["score"] == 60.0
+    assert result["actionable_insights"]["count"] >= 1
 
-    mock_get_holdings.assert_called_once_with(
-        mock_db
-    )
-    mock_price.assert_called_once_with("AAPL")
+
+@patch(
+    "app.services.portfolio_calculation_service."
+    "PortfolioRepository.get_holdings"
+)
+@patch(
+    "app.services.portfolio_calculation_service."
+    "PriceService.get_live_price"
+)
+def test_calculate_portfolio_with_missing_price(
+    mock_price,
+    mock_get_holdings,
+):
+    mock_price.return_value = None
+
+    holding = MagicMock()
+    holding.id = 1
+    holding.asset_type = "US"
+    holding.symbol = "UNKNOWN"
+    holding.name = "Unknown"
+    holding.quantity = 1
+    holding.average_price = 50.0
+
+    mock_get_holdings.return_value = [holding]
+
+    result = PortfolioService.calculate(MagicMock())
+
+    assert result["summary"]["total_cost"] == 50.0
+    assert result["summary"]["total_value"] == 0.0
+    assert result["summary"]["unpriced_holdings_count"] == 1
+    assert result["holdings"][0]["current_price"] is None
+    assert result["concentration_risk"]["risk_level"] == "unknown"
+    assert result["health_score"]["components"][
+        "pricing_coverage_score"
+    ] == 0.0
