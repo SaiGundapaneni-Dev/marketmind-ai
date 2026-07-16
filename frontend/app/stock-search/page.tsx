@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import Sidebar from "@/components/Sidebar";
+import { apiFetch } from "@/lib/api";
 
-type MarketMindScore = {
+type VestoraScore = {
   score: number;
   rating: string;
   interpretation: string;
@@ -30,7 +31,7 @@ type StockData = {
   fifty_two_week_low?: number;
   analyst_target_price?: number;
   recommendation?: string;
-  marketmind_score?: MarketMindScore;
+  marketmind_score?: VestoraScore;
   error?: string;
 };
 
@@ -151,9 +152,6 @@ export default function StockSearchPage() {
   const [message, setMessage] = useState("");
   const [adding, setAdding] = useState(false);
 
-  const apiBaseUrl =
-    process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8000";
-
   async function searchStock(event: React.FormEvent) {
     event.preventDefault();
 
@@ -165,8 +163,8 @@ export default function StockSearchPage() {
     setMessage("");
 
     try {
-      const response = await fetch(
-        `${apiBaseUrl}/stocks/analyze/${cleanSymbol}`,
+      const response = await apiFetch(
+        `/stocks/analyze/${cleanSymbol}`,
         { cache: "no-store" }
       );
 
@@ -208,13 +206,10 @@ export default function StockSearchPage() {
     setMessage("Adding to portfolio...");
 
     try {
-      const response = await fetch(
-        `${apiBaseUrl}/portfolio/holdings`,
+      const response = await apiFetch(
+        "/portfolio/holdings",
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
           body: JSON.stringify({
             asset_type: "US",
             symbol: stock.symbol,
@@ -222,7 +217,6 @@ export default function StockSearchPage() {
             quantity: Number(quantity),
             average_price: Number(averagePrice),
             currency: "USD",
-            portfolio_id: 1,
           }),
         }
       );
@@ -237,7 +231,7 @@ export default function StockSearchPage() {
       setAveragePrice("");
     } catch (error) {
       console.error("Add holding error:", error);
-      setMessage("Unable to connect to MarketMind API.");
+      setMessage("Unable to connect to Vestora API.");
     } finally {
       setAdding(false);
     }
@@ -249,7 +243,7 @@ export default function StockSearchPage() {
     <main className="flex min-h-screen bg-slate-950 text-white">
       <Sidebar />
 
-      <section className="flex-1 px-6 py-8">
+      <section className="min-w-0 flex-1 px-6 py-8">
         <div className="mx-auto max-w-7xl">
           <div>
             <p className="text-sm font-medium text-blue-400">
@@ -259,7 +253,7 @@ export default function StockSearchPage() {
               Unified Company Research
             </h1>
             <p className="mt-2 text-slate-400">
-              Combine fundamentals, MarketMind scoring, relevant news,
+              Combine fundamentals, Vestora scoring, relevant news,
               portfolio exposure, bull and bear cases, and an explainable
               research classification.
             </p>
@@ -285,7 +279,7 @@ export default function StockSearchPage() {
 
           {loading && (
             <div className="mt-6 rounded-xl border border-blue-500/20 bg-blue-500/10 p-4 text-blue-200">
-              Building the unified MarketMind research report...
+              Building the unified Vestora research report...
             </div>
           )}
 
@@ -348,7 +342,7 @@ export default function StockSearchPage() {
                   {stock.marketmind_score && (
                     <section className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
                       <p className="text-sm font-medium text-blue-400">
-                        MarketMind Score
+                        Vestora Score
                       </p>
 
                       <div className="mt-3 flex flex-wrap items-end gap-4">

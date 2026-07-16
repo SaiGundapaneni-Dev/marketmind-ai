@@ -1,5 +1,5 @@
 "use client";
-
+import { apiFetch } from "@/lib/api";
 import { useEffect, useRef, useState } from "react";
 import Sidebar from "@/components/Sidebar";
 
@@ -56,7 +56,7 @@ type ConversationItem = {
   createdAt: string;
 };
 
-const STORAGE_KEY = "marketmind-copilot-history-v1";
+const STORAGE_KEY = "vestora-copilot-history-v1";
 const MAX_HISTORY_ITEMS = 30;
 
 const EXAMPLE_PROMPTS = [
@@ -144,9 +144,7 @@ export default function CopilotPage() {
   const conversationEndRef = useRef<HTMLDivElement | null>(null);
 
   const canSubmit = question.trim().length > 0 && !loading;
-  const apiBaseUrl =
-    process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8000";
-
+  
   useEffect(() => {
     setHistory(loadSavedHistory());
     setHistoryLoaded(true);
@@ -184,13 +182,12 @@ export default function CopilotPage() {
     setQuestion("");
 
     try {
-      const res = await fetch(`${apiBaseUrl}/copilot/ask`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ question: cleanQuestion }),
-      });
+	  const res = await apiFetch("/copilot/ask", {
+	  method: "POST",
+	  body: JSON.stringify({
+		question: cleanQuestion,
+	  }),
+	});
 
       if (!res.ok) {
         let message = "Copilot request failed.";
@@ -258,7 +255,7 @@ export default function CopilotPage() {
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="text-sm font-medium text-blue-400">AI Copilot</p>
-              <h1 className="mt-1 text-3xl font-bold">MarketMind Copilot</h1>
+              <h1 className="mt-1 text-3xl font-bold">Vestora Copilot</h1>
               <p className="mt-2 text-slate-400">
                 Ask questions about your portfolio, stocks, market news, and
                 IPO research.
@@ -300,7 +297,7 @@ export default function CopilotPage() {
               <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-900/50 p-8 text-center">
                 <h2 className="text-lg font-semibold">Start a conversation</h2>
                 <p className="mt-2 text-sm text-slate-400">
-                  Ask MarketMind to analyze your portfolio, research a stock,
+                  Ask Vestora to analyze your portfolio, research a stock,
                   summarize news, or review an IPO.
                 </p>
               </div>

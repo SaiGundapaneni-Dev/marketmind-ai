@@ -1,5 +1,5 @@
 "use client";
-
+import { apiFetch } from "@/lib/api";
 import { useEffect, useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import SummaryCard from "@/components/SummaryCard";
@@ -233,19 +233,15 @@ export default function Home() {
     useState("");
   const [newsError, setNewsError] = useState("");
 
-  const apiBaseUrl =
-    process.env.NEXT_PUBLIC_API_BASE_URL ??
-    "http://127.0.0.1:8000";
-
   useEffect(() => {
     async function loadPortfolio() {
       try {
-        const response = await fetch(
-          `${apiBaseUrl}/portfolio/`,
-          {
-            cache: "no-store",
-          }
-        );
+		const response = await apiFetch(
+		  "/portfolio/",
+		  {
+			cache: "no-store",
+		  }
+		);
 
         if (!response.ok) {
           setPortfolio(null);
@@ -268,7 +264,7 @@ export default function Home() {
     }
 
     loadPortfolio();
-  }, [apiBaseUrl]);
+  }, []);
 
   async function searchNews() {
     const cleanTicker =
@@ -284,12 +280,12 @@ export default function Home() {
     setSearchedTicker(cleanTicker);
 
     try {
-      const response = await fetch(
-        `${apiBaseUrl}/news/search/${cleanTicker}`,
-        {
-          cache: "no-store",
-        }
-      );
+		const response = await apiFetch(
+		  `/news/search/${cleanTicker}`,
+		  {
+			cache: "no-store",
+		  }
+		);	
 
       if (!response.ok) {
         setNews([]);

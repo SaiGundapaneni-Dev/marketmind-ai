@@ -1,7 +1,8 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
+
+import { apiFetch } from "@/lib/api";
 
 export type Holding = {
   id: number;
@@ -37,15 +38,9 @@ export default function HoldingsTable({
 }: {
   holdings: Holding[];
 }) {
-  const router = useRouter();
-
   const [deletingId, setDeletingId] =
     useState<number | null>(null);
   const [message, setMessage] = useState("");
-
-  const apiBaseUrl =
-    process.env.NEXT_PUBLIC_API_BASE_URL ??
-    "http://127.0.0.1:8000";
 
   async function deleteHolding(
     holding: Holding
@@ -62,8 +57,8 @@ export default function HoldingsTable({
     setMessage("");
 
     try {
-      const response = await fetch(
-        `${apiBaseUrl}/portfolio/holdings/${holding.id}`,
+      const response = await apiFetch(
+        `/portfolio/holdings/${holding.id}`,
         {
           method: "DELETE",
         }
@@ -88,7 +83,7 @@ export default function HoldingsTable({
       );
 
       setMessage(
-        "Unable to connect to the MarketMind API."
+        "Unable to connect to Vestora AI."
       );
     } finally {
       setDeletingId(null);
@@ -102,8 +97,7 @@ export default function HoldingsTable({
       </h2>
 
       <p className="mt-1 text-sm text-slate-400">
-        Live portfolio holdings from the MarketMind
-        API.
+        Live holdings from your private Vestora portfolio.
       </p>
 
       {message && (
@@ -130,49 +124,17 @@ export default function HoldingsTable({
           <table className="w-full min-w-[1150px] text-left text-sm">
             <thead className="border-b border-slate-800 text-slate-400">
               <tr>
-                <th className="py-3 pr-4">
-                  Symbol
-                </th>
-
-                <th className="py-3 pr-4">
-                  Name
-                </th>
-
-                <th className="py-3 pr-4">
-                  Asset
-                </th>
-
-                <th className="py-3 pr-4">
-                  Qty
-                </th>
-
-                <th className="py-3 pr-4">
-                  Avg Price
-                </th>
-
-                <th className="py-3 pr-4">
-                  Current Price
-                </th>
-
-                <th className="py-3 pr-4">
-                  Current Value
-                </th>
-
-                <th className="py-3 pr-4">
-                  Allocation
-                </th>
-
-                <th className="py-3 pr-4">
-                  P/L
-                </th>
-
-                <th className="py-3 pr-4">
-                  P/L %
-                </th>
-
-                <th className="py-3">
-                  Actions
-                </th>
+                <th className="py-3 pr-4">Symbol</th>
+                <th className="py-3 pr-4">Name</th>
+                <th className="py-3 pr-4">Asset</th>
+                <th className="py-3 pr-4">Qty</th>
+                <th className="py-3 pr-4">Avg Price</th>
+                <th className="py-3 pr-4">Current Price</th>
+                <th className="py-3 pr-4">Current Value</th>
+                <th className="py-3 pr-4">Allocation</th>
+                <th className="py-3 pr-4">P/L</th>
+                <th className="py-3 pr-4">P/L %</th>
+                <th className="py-3">Actions</th>
               </tr>
             </thead>
 
@@ -199,28 +161,19 @@ export default function HoldingsTable({
                   </td>
 
                   <td className="py-4 pr-4">
-                    {formatMoney(
-                      holding.average_price
-                    )}
+                    {formatMoney(holding.average_price)}
                   </td>
 
                   <td className="py-4 pr-4">
-                    {formatMoney(
-                      holding.current_price
-                    )}
+                    {formatMoney(holding.current_price)}
                   </td>
 
                   <td className="py-4 pr-4">
-                    {formatMoney(
-                      holding.current_value
-                    )}
+                    {formatMoney(holding.current_value)}
                   </td>
 
                   <td className="py-4 pr-4">
-                    {holding.allocation_percent.toFixed(
-                      2
-                    )}
-                    %
+                    {holding.allocation_percent.toFixed(2)}%
                   </td>
 
                   <td
@@ -240,14 +193,12 @@ export default function HoldingsTable({
                         : "text-red-300"
                     }`}
                   >
-                    {holding.profit_percent.toFixed(
-                      2
-                    )}
-                    %
+                    {holding.profit_percent.toFixed(2)}%
                   </td>
 
                   <td className="py-4">
                     <button
+                      type="button"
                       onClick={() =>
                         deleteHolding(holding)
                       }

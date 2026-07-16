@@ -1,5 +1,5 @@
 "use client";
-
+import { apiFetch } from "@/lib/api";
 import { useEffect, useState } from "react";
 import Sidebar from "@/components/Sidebar";
 
@@ -61,13 +61,13 @@ export default function WatchlistPage() {
   const [analyzing, setAnalyzing] = useState(false);
   const [message, setMessage] = useState("");
 
-  const apiBaseUrl =
-    process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8000";
-
   async function loadItems() {
-    const response = await fetch(`${apiBaseUrl}/watchlist/`, {
-      cache: "no-store",
-    });
+	const response = await apiFetch(
+		"/watchlist/",
+		{
+		  cache: "no-store",
+		}
+	  );
 
     if (!response.ok) {
       throw new Error("Unable to load watchlist.");
@@ -92,44 +92,68 @@ export default function WatchlistPage() {
     load();
   }, []);
 
-  async function addItem(event: React.FormEvent) {
-    event.preventDefault();
+	async function addItem(
+	  event: React.FormEvent
+	) {
+	  event.preventDefault();
 
-    const cleanSymbol = symbol.trim().toUpperCase();
-    if (!cleanSymbol) return;
+	  const cleanSymbol =
+		symbol.trim().toUpperCase();
 
-    setMessage("");
+	  if (!cleanSymbol) {
+		return;
+	  }
 
-    const response = await fetch(`${apiBaseUrl}/watchlist/`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        symbol: cleanSymbol,
-        company_name: companyName.trim() || null,
-        notes: null,
-        user_id: null,
-      }),
-    });
+	  setMessage("");
 
-    if (response.status === 409) {
-      setMessage(`${cleanSymbol} is already in your watchlist.`);
-      return;
-    }
+	  try {
+		const response = await apiFetch(
+		  "/watchlist/",
+		  {
+			method: "POST",
+			body: JSON.stringify({
+			  symbol: cleanSymbol,
+			  company_name:
+				companyName.trim() || null,
+			  notes: null,
+			}),
+		  }
+		);
 
-    if (!response.ok) {
-      setMessage("Unable to add this symbol.");
-      return;
-    }
+		if (response.status === 409) {
+		  setMessage(
+			`${cleanSymbol} is already in your watchlist.`
+		  );
+		  return;
+		}
 
-    setSymbol("");
-    setCompanyName("");
-    setSummary(null);
-    setMessage(`${cleanSymbol} added successfully.`);
-    await loadItems();
-  }
+		if (!response.ok) {
+		  setMessage(
+			"Unable to add this symbol."
+		  );
+		  return;
+		}
 
+		setSymbol("");
+		setCompanyName("");
+		setSummary(null);
+
+		setMessage(
+		  `${cleanSymbol} added successfully.`
+		);
+
+		await loadItems();
+	  } catch (error) {
+		console.error(
+		  "Add watchlist error:",
+		  error
+		);
+
+		setMessage(
+		  "Unable to connect to Vestora AI."
+		);
+	  }
+	}
   async function deleteItem(item: WatchlistItem) {
     const confirmed = window.confirm(
       `Remove ${item.symbol} from your watchlist?`
@@ -137,8 +161,8 @@ export default function WatchlistPage() {
 
     if (!confirmed) return;
 
-    const response = await fetch(
-      `${apiBaseUrl}/watchlist/${item.id}`,
+    const response = await apiFetch(
+      `/watchlist/${item.id}`,
       { method: "DELETE" }
     );
 
@@ -157,8 +181,8 @@ export default function WatchlistPage() {
     setMessage("");
 
     try {
-      const response = await fetch(
-        `${apiBaseUrl}/watchlist/analysis`,
+      const response = await apiFetch(
+        "/watchlist/analysis",
         { cache: "no-store" }
       );
 
@@ -180,7 +204,7 @@ export default function WatchlistPage() {
     <main className="flex min-h-screen bg-slate-950 text-white">
       <Sidebar />
 
-      <section className="flex-1 px-6 py-8">
+      <section className="min-w-0 flex-1 px-6 py-8">
         <div className="mx-auto max-w-7xl">
           <p className="text-sm font-medium text-blue-400">
             Watchlist Intelligence
@@ -333,7 +357,7 @@ export default function WatchlistPage() {
                             value={formatMoney(item.current_price)}
                           />
                           <Metric
-                            title="MarketMind"
+                            title="Vestora"
                             value={`${item.marketmind_score ?? "N/A"}/100`}
                           />
                           <Metric
