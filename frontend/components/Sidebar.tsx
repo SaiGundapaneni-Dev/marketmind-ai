@@ -15,6 +15,7 @@ type StoredUser = {
 
 const links = [
   { href: "/", label: "Dashboard" },
+  { href: "/intelligence", label: "Portfolio Intelligence" },
   { href: "/stock-search", label: "Stock Search" },
   { href: "/watchlist", label: "AI Watchlist" },
   { href: "/news", label: "News" },
@@ -24,7 +25,6 @@ const links = [
 
 export default function Sidebar() {
   const pathname = usePathname();
-
   const [user, setUser] = useState<StoredUser | null>(null);
 
   useEffect(() => {
@@ -46,16 +46,13 @@ export default function Sidebar() {
   return (
     <aside className="sticky top-0 flex h-screen w-64 shrink-0 flex-col border-r border-slate-800 bg-slate-950 p-6 text-white">
       <div>
-        <h1 className="text-xl font-bold">
-          Vestora AI
-        </h1>
-
+        <h1 className="text-xl font-bold">Vestora AI</h1>
         <p className="mt-1 text-xs text-slate-500">
           Investment Intelligence
         </p>
       </div>
 
-      <nav className="mt-8 flex-1 space-y-2 text-sm">
+      <nav className="mt-8 flex-1 space-y-2 overflow-y-auto text-sm">
         {links.map((link) => {
           const isActive =
             link.href === "/"
@@ -84,7 +81,6 @@ export default function Sidebar() {
             <p className="truncate text-sm font-semibold text-white">
               {user.name}
             </p>
-
             <p className="mt-1 truncate text-xs text-slate-400">
               {user.email}
             </p>
