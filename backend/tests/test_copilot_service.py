@@ -90,6 +90,53 @@ SAMPLE_PORTFOLIO = {
     "holdings": [],
 }
 
+SAMPLE_INTELLIGENCE = {
+    "portfolio_status": "fair",
+    "executive_summary": (
+        "Your portfolio contains 4 holdings and is "
+        "valued at $1,250.00."
+    ),
+    "priority_insights": [
+        {
+            "priority": 1,
+            "category": "concentration",
+            "severity": "high",
+            "title": "High concentration risk",
+            "message": (
+                "The top three holdings represent 72.00% "
+                "of portfolio value."
+            ),
+            "evidence": [
+                "Largest position: 32.00%",
+            ],
+            "suggested_action": (
+                "Review whether your largest positions "
+                "still match your risk tolerance."
+            ),
+            "affected_symbols": ["AAPL"],
+        }
+    ],
+    "strengths": [],
+    "risks": [],
+    "opportunities": [],
+    "holdings_to_watch": [
+        {
+            "symbol": "AAPL",
+            "name": "Apple",
+            "allocation_percent": 32.0,
+            "profit": 100.0,
+            "profit_percent": 25.0,
+            "reason": "Large portfolio allocation",
+        }
+    ],
+    "recent_changes": [
+        "Portfolio value increased by $50.00."
+    ],
+    "recommended_questions": [],
+    "disclaimer": "Informational only.",
+}
+
+
 
 def test_detect_portfolio_intent():
     assert CopilotService.detect_intent("Summarize my portfolio") == "portfolio"
@@ -224,14 +271,21 @@ def test_portfolio_question_type_health():
     return_value=SAMPLE_PORTFOLIO,
 )
 def test_answer_portfolio_summary(mock_calculate):
-    response = CopilotService.answer("Analyze my portfolio", db=None, user_id=1)
+    response = CopilotService.answer(
+        "Analyze my portfolio",
+        db=None,
+        user_id=1,
+    )
 
     assert response["intent"] == "portfolio"
     assert response["portfolio_question_type"] == "summary"
     assert response["status"] == "success"
     assert response["answer"]
     assert "portfolio contains 4 holdings" in response["answer"].lower()
-    mock_calculate.assert_called_once_with(None, 1)
+    mock_calculate.assert_called_once_with(
+        None,
+        1,
+    )
 
 
 @patch(
@@ -242,8 +296,8 @@ def test_answer_portfolio_strengths(mock_calculate):
     response = CopilotService.answer(
         "What are the strengths of my portfolio?",
         db=None,
-    
-    user_id=1,)
+        user_id=1,
+    )
 
     assert response["portfolio_question_type"] == "strengths"
     assert response["answer"].startswith(
@@ -259,8 +313,8 @@ def test_answer_portfolio_risks(mock_calculate):
     response = CopilotService.answer(
         "What is my biggest portfolio risk?",
         db=None,
-    
-    user_id=1,)
+        user_id=1,
+    )
 
     assert response["portfolio_question_type"] == "risks"
     assert response["answer"].startswith(
@@ -277,8 +331,8 @@ def test_answer_portfolio_recommendations(mock_calculate):
     response = CopilotService.answer(
         "How can I improve my portfolio?",
         db=None,
-    
-    user_id=1,)
+        user_id=1,
+    )
 
     assert response["portfolio_question_type"] == "recommendations"
     assert response["answer"].startswith(
@@ -294,8 +348,8 @@ def test_answer_portfolio_diversification(mock_calculate):
     response = CopilotService.answer(
         "Is my portfolio diversified?",
         db=None,
-    
-    user_id=1,)
+        user_id=1,
+    )
 
     assert response["portfolio_question_type"] == "diversification"
     assert response["answer"] is not None
@@ -310,8 +364,8 @@ def test_answer_portfolio_health(mock_calculate):
     response = CopilotService.answer(
         "Is my portfolio healthy?",
         db=None,
-    
-    user_id=1,)
+        user_id=1,
+    )
 
     assert response["portfolio_question_type"] == "health"
     assert response["answer"] is not None
@@ -319,7 +373,119 @@ def test_answer_portfolio_health(mock_calculate):
 
 
 def test_empty_question():
-    response = CopilotService.answer("   ", db=None, user_id=1)
-
+    response = CopilotService.answer(
+        "   ",
+        db=None,
+        user_id=1,
+    )
     assert response["intent"] == "general"
     assert response["status"] == "needs_more_info"
+
+
+def test_portfolio_question_type_focus():
+    assert (
+        CopilotService.detect_portfolio_question_type(
+            "What should I focus on today?"
+        )
+        == "focus"
+    )
+
+
+def test_portfolio_question_type_holdings_to_watch():
+    assert (
+        CopilotService.detect_portfolio_question_type(
+            "Which holding deserves attention?"
+        )
+        == "holdings_to_watch"
+    )
+
+
+def test_portfolio_question_type_changes():
+    assert (
+        CopilotService.detect_portfolio_question_type(
+            "What changed since yesterday?"
+        )
+        == "changes"
+    )
+
+
+@patch(
+    "app.services.copilot_service."
+    "PortfolioIntelligenceService.generate",
+    return_value=SAMPLE_INTELLIGENCE,
+)
+def test_answer_daily_focus(
+    mock_generate,
+):
+    response = CopilotService.answer(
+        "What should I focus on today?",
+        db=None,
+        user_id=1,
+    )
+
+    assert response["intent"] == "portfolio"
+    assert (
+        response["portfolio_question_type"]
+        == "focus"
+    )
+    assert response["status"] == "success"
+    assert "highest-priority" in response[
+        "answer"
+    ].lower()
+
+    mock_generate.assert_called_once_with(
+        None,
+        1,
+    )
+
+
+@patch(
+    "app.services.copilot_service."
+    "PortfolioIntelligenceService.generate",
+    return_value=SAMPLE_INTELLIGENCE,
+)
+def test_answer_holdings_to_watch(
+    mock_generate,
+):
+    response = CopilotService.answer(
+        "Which holding deserves attention?",
+        db=None,
+        user_id=1,
+    )
+
+    assert (
+        response["portfolio_question_type"]
+        == "holdings_to_watch"
+    )
+    assert "AAPL" in response["answer"]
+
+    mock_generate.assert_called_once_with(
+        None,
+        1,
+    )
+
+
+@patch(
+    "app.services.copilot_service."
+    "PortfolioIntelligenceService.generate",
+    return_value=SAMPLE_INTELLIGENCE,
+)
+def test_answer_recent_changes(
+    mock_generate,
+):
+    response = CopilotService.answer(
+        "What changed since yesterday?",
+        db=None,
+        user_id=1,
+    )
+
+    assert (
+        response["portfolio_question_type"]
+        == "changes"
+    )
+    assert "$50.00" in response["answer"]
+
+    mock_generate.assert_called_once_with(
+        None,
+        1,
+    )

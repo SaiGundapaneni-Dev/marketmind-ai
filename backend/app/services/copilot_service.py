@@ -4,6 +4,9 @@ from sqlalchemy.orm import Session
 
 from app.services.ipo_service import IPOService
 from app.services.news_service import NewsService
+from app.services.portfolio_intelligence_service import (
+    PortfolioIntelligenceService,
+)
 from app.services.portfolio_service import PortfolioService
 from app.services.sec_service import SECService
 from app.services.stock_service import StockService
@@ -149,6 +152,19 @@ class CopilotService:
             "what's good",
             "doing well",
             "performing well",
+            "focus on today",
+            "focus today",
+            "attention today",
+            "needs attention",
+            "need attention",
+            "deserves attention",
+            "holding to watch",
+            "holdings to watch",
+            "what changed",
+            "changed since yesterday",
+            "changed since",
+            "recent changes",
+            "portfolio update",
         }
 
         stock_terms = {
@@ -257,6 +273,44 @@ class CopilotService:
             "score breakdown",
             "overall score",
         }
+
+        focus_terms = {
+            "focus on today",
+            "focus today",
+            "attention today",
+            "what should i focus on",
+            "priority",
+            "priorities",
+            "most important",
+        }
+
+        watch_terms = {
+            "needs attention",
+            "need attention",
+            "deserves attention",
+            "holding to watch",
+            "holdings to watch",
+            "watch closely",
+            "which holding",
+        }
+
+        changes_terms = {
+            "what changed",
+            "changed since yesterday",
+            "changed since",
+            "recent changes",
+            "portfolio update",
+            "since my previous snapshot",
+        }
+
+        if any(term in text for term in changes_terms):
+            return "changes"
+
+        if any(term in text for term in watch_terms):
+            return "holdings_to_watch"
+
+        if any(term in text for term in focus_terms):
+            return "focus"
 
         if any(term in text for term in strength_terms):
             return "strengths"
@@ -1218,6 +1272,94 @@ class CopilotService:
         )
 
     @staticmethod
+    def build_daily_focus(
+        intelligence: dict,
+    ) -> str:
+        executive_summary = intelligence.get(
+            "executive_summary",
+            "",
+        )
+
+        priority_insights = intelligence.get(
+            "priority_insights",
+            [],
+        )
+
+        if not priority_insights:
+            return (
+                f"{executive_summary} "
+                "No urgent portfolio priorities were identified today."
+            ).strip()
+
+        priority = priority_insights[0]
+
+        return (
+            f"{executive_summary} "
+            f"Your highest-priority area today is "
+            f"{priority.get('title', 'portfolio review')}. "
+            f"{priority.get('message', '')} "
+            f"Suggested action: "
+            f"{priority.get('suggested_action', '')}"
+        ).strip()
+
+    @staticmethod
+    def build_holdings_to_watch(
+        intelligence: dict,
+    ) -> str:
+        holdings = intelligence.get(
+            "holdings_to_watch",
+            [],
+        )
+
+        if not holdings:
+            return (
+                "No individual holding currently stands out as "
+                "requiring special attention."
+            )
+
+        messages = []
+
+        for holding in holdings[:3]:
+            messages.append(
+                (
+                    f"{holding.get('symbol')} represents "
+                    f"{holding.get('allocation_percent', 0):.2f}% "
+                    f"of the portfolio and has an unrealized return of "
+                    f"{holding.get('profit_percent', 0):.2f}%. "
+                    f"Reason to watch: {holding.get('reason')}."
+                )
+            )
+
+        return (
+            "The holdings that deserve the most attention are: "
+            + " ".join(messages)
+            + " These observations are informational and are not "
+            + "personalized financial advice."
+        )
+
+    @staticmethod
+    def build_recent_changes(
+        intelligence: dict,
+    ) -> str:
+        changes = intelligence.get(
+            "recent_changes",
+            [],
+        )
+
+        if not changes:
+            return (
+                "I do not have enough snapshot history to identify "
+                "recent portfolio changes yet. Create another daily "
+                "snapshot after the portfolio changes."
+            )
+
+        return (
+            "Here is what changed since your previous portfolio "
+            "snapshot: "
+            + " ".join(changes)
+        )
+
+    @staticmethod
     def answer(
         question: str,
         db: Session,
@@ -1238,14 +1380,67 @@ class CopilotService:
         )
 
         if intent == "portfolio":
-            portfolio = PortfolioService.calculate(
-                db,
-                user_id,
-            )
             portfolio_question_type = (
                 CopilotService.detect_portfolio_question_type(
                     clean_question
                 )
+            )
+
+            intelligence_question_types = {
+                "focus",
+                "holdings_to_watch",
+                "changes",
+            }
+
+            if (
+                portfolio_question_type
+                in intelligence_question_types
+            ):
+                intelligence = (
+                    PortfolioIntelligenceService.generate(
+                        db,
+                        user_id,
+                    )
+                )
+
+                if portfolio_question_type == "focus":
+                    answer_text = (
+                        CopilotService.build_daily_focus(
+                            intelligence
+                        )
+                    )
+
+                elif (
+                    portfolio_question_type
+                    == "holdings_to_watch"
+                ):
+                    answer_text = (
+                        CopilotService.build_holdings_to_watch(
+                            intelligence
+                        )
+                    )
+
+                else:
+                    answer_text = (
+                        CopilotService.build_recent_changes(
+                            intelligence
+                        )
+                    )
+
+                return {
+                    "question": clean_question,
+                    "intent": intent,
+                    "portfolio_question_type": (
+                        portfolio_question_type
+                    ),
+                    "answer": answer_text,
+                    "data": intelligence,
+                    "status": "success",
+                }
+
+            portfolio = PortfolioService.calculate(
+                db,
+                user_id,
             )
 
             if portfolio_question_type == "strengths":
