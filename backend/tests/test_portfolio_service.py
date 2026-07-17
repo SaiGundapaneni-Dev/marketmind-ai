@@ -27,7 +27,10 @@ def test_calculate_portfolio(
 
     mock_get_holdings.return_value = [holding]
 
-    result = PortfolioService.calculate(MagicMock())
+    result = PortfolioService.calculate(
+        MagicMock(),
+        user_id=1,
+    )
 
     assert result["summary"]["total_cost"] == 200.0
     assert result["summary"]["total_value"] == 400.0
@@ -79,7 +82,10 @@ def test_calculate_portfolio_with_missing_price(
 
     mock_get_holdings.return_value = [holding]
 
-    result = PortfolioService.calculate(MagicMock())
+    result = PortfolioService.calculate(
+        MagicMock(),
+        user_id=1,
+    )
 
     assert result["summary"]["total_cost"] == 50.0
     assert result["summary"]["total_value"] == 0.0

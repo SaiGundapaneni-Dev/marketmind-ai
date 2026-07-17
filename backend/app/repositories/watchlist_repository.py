@@ -1,34 +1,46 @@
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.models import WatchlistItem
+from app.models.models import WatchlistItem
 
 
 class WatchlistRepository:
 
     @staticmethod
-    def list_items(db: Session, user_id: int | None = None):
-        query = db.query(WatchlistItem)
-
-        if user_id is None:
-            query = query.filter(WatchlistItem.user_id.is_(None))
-        else:
-            query = query.filter(WatchlistItem.user_id == user_id)
-
-        return query.order_by(WatchlistItem.created_at.desc()).all()
-
-    @staticmethod
-    def get_by_id(db: Session, item_id: int):
+    def list_items(
+        db: Session,
+        user_id: int,
+    ):
         return (
             db.query(WatchlistItem)
-            .filter(WatchlistItem.id == item_id)
+            .filter(WatchlistItem.user_id == user_id)
+            .order_by(WatchlistItem.created_at.desc())
+            .all()
+        )
+
+    @staticmethod
+    def get_by_id(
+        db: Session,
+        user_id: int,
+        item_id: int,
+    ):
+        return (
+            db.query(WatchlistItem)
+            .filter(
+                WatchlistItem.id == item_id,
+                WatchlistItem.user_id == user_id,
+            )
             .first()
         )
 
     @staticmethod
-    def create(db: Session, data):
+    def create(
+        db: Session,
+        user_id: int,
+        data,
+    ):
         item = WatchlistItem(
-            user_id=data.user_id,
+            user_id=user_id,
             symbol=data.symbol.strip().upper(),
             company_name=(
                 data.company_name.strip()
@@ -50,8 +62,17 @@ class WatchlistRepository:
         return item
 
     @staticmethod
-    def update(db: Session, item_id: int, data):
-        item = WatchlistRepository.get_by_id(db, item_id)
+    def update(
+        db: Session,
+        user_id: int,
+        item_id: int,
+        data,
+    ):
+        item = WatchlistRepository.get_by_id(
+            db,
+            user_id,
+            item_id,
+        )
 
         if item is None:
             return None
@@ -67,8 +88,16 @@ class WatchlistRepository:
         return item
 
     @staticmethod
-    def delete(db: Session, item_id: int):
-        item = WatchlistRepository.get_by_id(db, item_id)
+    def delete(
+        db: Session,
+        user_id: int,
+        item_id: int,
+    ):
+        item = WatchlistRepository.get_by_id(
+            db,
+            user_id,
+            item_id,
+        )
 
         if item is None:
             return None

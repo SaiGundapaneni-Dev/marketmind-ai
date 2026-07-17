@@ -406,7 +406,11 @@ class StockAnalysisService:
         }
 
     @staticmethod
-    def analyze(symbol: str, db: Session) -> dict:
+    def analyze(
+        symbol: str, 
+        db: Session,
+        user_id: int,
+    ) -> dict:
         ticker = symbol.strip().upper()
 
         if not ticker:
@@ -436,7 +440,7 @@ class StockAnalysisService:
             }
 
         try:
-            portfolio = PortfolioService.calculate(db)
+            portfolio = PortfolioService.calculate(db, user_id)
         except Exception:
             portfolio = {"holdings": []}
 

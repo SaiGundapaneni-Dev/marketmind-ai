@@ -8,9 +8,15 @@ from app.services.price_service import PriceService
 
 class PortfolioCalculationService:
     @staticmethod
-    def calculate(db: Session) -> dict:
-        db_holdings = PortfolioRepository.get_holdings(db)
-
+    def calculate(
+        db: Session,
+        user_id: int,
+    ) -> dict:
+        db_holdings = PortfolioRepository.get_holdings(
+            db,
+            user_id,
+        )
+        
         holdings = []
         total_cost = 0.0
         total_value = 0.0

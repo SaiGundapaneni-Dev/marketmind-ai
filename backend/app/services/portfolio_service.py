@@ -1,30 +1,35 @@
 from sqlalchemy.orm import Session
 
 from app.repositories.portfolio_repository import PortfolioRepository
-from app.services.portfolio_analytics_service import (
-    PortfolioAnalyticsService,
-)
-from app.services.portfolio_calculation_service import (
-    PortfolioCalculationService,
-)
-from app.services.portfolio_health_service import (
-    PortfolioHealthService,
-)
+from app.services.portfolio_analytics_service import PortfolioAnalyticsService
+from app.services.portfolio_calculation_service import PortfolioCalculationService
+from app.services.portfolio_health_service import PortfolioHealthService
 
 
 class PortfolioService:
+
     @staticmethod
-    def create_holding(db: Session, holding_data):
-        return PortfolioRepository.create_holding(db, holding_data)
+    def create_holding(
+        db: Session,
+        user_id: int,
+        holding_data,
+    ):
+        return PortfolioRepository.create_holding(
+            db,
+            user_id,
+            holding_data,
+        )
 
     @staticmethod
     def update_holding(
         db: Session,
+        user_id: int,
         holding_id: int,
         holding_data,
     ):
         return PortfolioRepository.update_holding(
             db,
+            user_id,
             holding_id,
             holding_data,
         )
@@ -32,26 +37,36 @@ class PortfolioService:
     @staticmethod
     def get_holding_by_id(
         db: Session,
+        user_id: int,
         holding_id: int,
     ):
         return PortfolioRepository.get_holding_by_id(
             db,
+            user_id,
             holding_id,
         )
 
     @staticmethod
     def delete_holding(
         db: Session,
+        user_id: int,
         holding_id: int,
     ):
         return PortfolioRepository.delete_holding(
             db,
+            user_id,
             holding_id,
         )
 
     @staticmethod
-    def calculate(db: Session) -> dict:
-        portfolio = PortfolioCalculationService.calculate(db)
+    def calculate(
+        db: Session,
+        user_id: int,
+    ) -> dict:
+        portfolio = PortfolioCalculationService.calculate(
+            db,
+            user_id,
+        )
 
         holdings = portfolio["holdings"]
         allocation = portfolio["allocation"]
@@ -61,21 +76,16 @@ class PortfolioService:
                 holdings
             )
         )
-
         performance_insights = (
             PortfolioAnalyticsService.calculate_performance_insights(
                 holdings
             )
         )
-
-        health_score = (
-            PortfolioHealthService.calculate_health_score(
-                holdings,
-                concentration_risk,
-                performance_insights,
-            )
+        health_score = PortfolioHealthService.calculate_health_score(
+            holdings,
+            concentration_risk,
+            performance_insights,
         )
-
         actionable_insights = (
             PortfolioAnalyticsService.generate_actionable_insights(
                 holdings,

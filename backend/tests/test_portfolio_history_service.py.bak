@@ -33,8 +33,7 @@ def test_get_performance(mock_history):
 
     result = PortfolioHistoryService.get_performance(
         MagicMock()
-    ,
-    user_id=1,)
+    )
 
     assert result["current_value"] == 1050
     assert result["previous_value"] == 1100
@@ -72,8 +71,7 @@ def test_get_contributors(mock_calculate):
 
     result = PortfolioHistoryService.get_contributors(
         MagicMock()
-    ,
-    user_id=1,)
+    )
 
     assert result["top_contributors"][0]["symbol"] == "AAPL"
     assert result["bottom_contributors"][0]["symbol"] == "MSFT"
@@ -108,8 +106,7 @@ def test_get_changes(mock_latest, mock_previous):
 
     result = PortfolioHistoryService.get_changes(
         MagicMock()
-    ,
-    user_id=1,)
+    )
 
     assert result["has_previous_snapshot"] is True
     assert result["value_change"] == 200
@@ -141,8 +138,7 @@ def test_create_daily_snapshot_prevents_duplicate(
 
     result = PortfolioHistoryService.create_daily_snapshot(
         MagicMock()
-    ,
-    user_id=1,)
+    )
 
     assert result is existing
     mock_calculate.assert_not_called()

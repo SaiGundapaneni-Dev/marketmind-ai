@@ -10,7 +10,6 @@ class HoldingCreate(BaseModel):
     quantity: float = Field(gt=0)
     average_price: float = Field(gt=0)
     currency: str
-    portfolio_id: int
 
 
 class HoldingUpdate(BaseModel):

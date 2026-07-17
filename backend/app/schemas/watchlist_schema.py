@@ -8,7 +8,6 @@ class WatchlistCreate(BaseModel):
     symbol: str = Field(min_length=1, max_length=10)
     company_name: Optional[str] = Field(default=None, max_length=255)
     notes: Optional[str] = Field(default=None, max_length=1000)
-    user_id: Optional[int] = None
 
 
 class WatchlistUpdate(BaseModel):
@@ -18,7 +17,7 @@ class WatchlistUpdate(BaseModel):
 
 class WatchlistItemResponse(BaseModel):
     id: int
-    user_id: Optional[int] = None
+    user_id: int
     symbol: str
     company_name: Optional[str] = None
     notes: Optional[str] = None

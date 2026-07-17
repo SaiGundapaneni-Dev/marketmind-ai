@@ -20,6 +20,17 @@ app = FastAPI(
     version=settings.app_version,
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(auth_router)
 app.include_router(news_router)
 app.include_router(stocks_router)
@@ -28,14 +39,6 @@ app.include_router(sec_router)
 app.include_router(copilot_router)
 app.include_router(portfolio_router)
 app.include_router(watchlist_router)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 app.add_exception_handler(Exception, global_exception_handler)
 

@@ -70,7 +70,11 @@ class Portfolio(Base):
 
     user = relationship("User", back_populates="portfolios")
     holdings = relationship("Holding", back_populates="portfolio")
-
+    snapshots = relationship(
+        "PortfolioSnapshot",
+        back_populates="portfolio",
+        cascade="all, delete-orphan",
+    )
 
 class Holding(Base):
     __tablename__ = "holdings"

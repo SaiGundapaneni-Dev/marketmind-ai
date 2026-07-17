@@ -224,14 +224,14 @@ def test_portfolio_question_type_health():
     return_value=SAMPLE_PORTFOLIO,
 )
 def test_answer_portfolio_summary(mock_calculate):
-    response = CopilotService.answer("Analyze my portfolio", db=None, user_id=1)
+    response = CopilotService.answer("Analyze my portfolio", db=None)
 
     assert response["intent"] == "portfolio"
     assert response["portfolio_question_type"] == "summary"
     assert response["status"] == "success"
     assert response["answer"]
     assert "portfolio contains 4 holdings" in response["answer"].lower()
-    mock_calculate.assert_called_once_with(None, 1)
+    mock_calculate.assert_called_once_with(None)
 
 
 @patch(
@@ -242,8 +242,7 @@ def test_answer_portfolio_strengths(mock_calculate):
     response = CopilotService.answer(
         "What are the strengths of my portfolio?",
         db=None,
-    
-    user_id=1,)
+    )
 
     assert response["portfolio_question_type"] == "strengths"
     assert response["answer"].startswith(
@@ -259,8 +258,7 @@ def test_answer_portfolio_risks(mock_calculate):
     response = CopilotService.answer(
         "What is my biggest portfolio risk?",
         db=None,
-    
-    user_id=1,)
+    )
 
     assert response["portfolio_question_type"] == "risks"
     assert response["answer"].startswith(
@@ -277,8 +275,7 @@ def test_answer_portfolio_recommendations(mock_calculate):
     response = CopilotService.answer(
         "How can I improve my portfolio?",
         db=None,
-    
-    user_id=1,)
+    )
 
     assert response["portfolio_question_type"] == "recommendations"
     assert response["answer"].startswith(
@@ -294,8 +291,7 @@ def test_answer_portfolio_diversification(mock_calculate):
     response = CopilotService.answer(
         "Is my portfolio diversified?",
         db=None,
-    
-    user_id=1,)
+    )
 
     assert response["portfolio_question_type"] == "diversification"
     assert response["answer"] is not None
@@ -310,8 +306,7 @@ def test_answer_portfolio_health(mock_calculate):
     response = CopilotService.answer(
         "Is my portfolio healthy?",
         db=None,
-    
-    user_id=1,)
+    )
 
     assert response["portfolio_question_type"] == "health"
     assert response["answer"] is not None
@@ -319,7 +314,7 @@ def test_answer_portfolio_health(mock_calculate):
 
 
 def test_empty_question():
-    response = CopilotService.answer("   ", db=None, user_id=1)
+    response = CopilotService.answer("   ", db=None)
 
     assert response["intent"] == "general"
     assert response["status"] == "needs_more_info"

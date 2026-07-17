@@ -9,20 +9,38 @@ from app.services.stock_analysis_service import StockAnalysisService
 class WatchlistService:
 
     @staticmethod
-    def list_items(db: Session, user_id: int | None = None):
+    def list_items(db: Session, user_id: int):
         return WatchlistRepository.list_items(db, user_id)
 
     @staticmethod
-    def create_item(db: Session, data):
-        return WatchlistRepository.create(db, data)
+    def create_item(db: Session, user_id: int, data):
+        return WatchlistRepository.create(db, user_id, data)
 
     @staticmethod
-    def update_item(db: Session, item_id: int, data):
-        return WatchlistRepository.update(db, item_id, data)
+    def update_item(
+        db: Session,
+        user_id: int,
+        item_id: int,
+        data,
+    ):
+        return WatchlistRepository.update(
+            db,
+            user_id,
+            item_id,
+            data,
+        )
 
     @staticmethod
-    def delete_item(db: Session, item_id: int):
-        return WatchlistRepository.delete(db, item_id)
+    def delete_item(
+        db: Session,
+        user_id: int,
+        item_id: int,
+    ):
+        return WatchlistRepository.delete(
+            db,
+            user_id,
+            item_id,
+        )
 
     @staticmethod
     def _risk_level(report: dict) -> str:
@@ -85,13 +103,17 @@ class WatchlistService:
     @staticmethod
     def analyze_watchlist(
         db: Session,
-        user_id: int | None = None,
+        user_id: int,
     ):
         items = WatchlistRepository.list_items(db, user_id)
         intelligence_items = []
 
         for item in items:
-            report = StockAnalysisService.analyze(item.symbol, db)
+            report = StockAnalysisService.analyze(
+                item.symbol,
+                db,
+                user_id=user_id,
+            )
             intelligence_items.append(
                 WatchlistService.build_intelligence_item(
                     item,

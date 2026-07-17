@@ -1221,6 +1221,7 @@ class CopilotService:
     def answer(
         question: str,
         db: Session,
+        user_id: int,
     ):
         clean_question = question.strip()
 
@@ -1237,8 +1238,10 @@ class CopilotService:
         )
 
         if intent == "portfolio":
-            portfolio = PortfolioService.calculate(db)
-
+            portfolio = PortfolioService.calculate(
+                db,
+                user_id,
+            )
             portfolio_question_type = (
                 CopilotService.detect_portfolio_question_type(
                     clean_question
