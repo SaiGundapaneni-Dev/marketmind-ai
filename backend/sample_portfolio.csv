@@ -1,0 +1,4 @@
+symbol,name,quantity,average_price,asset_type,currency
+AAPL,Apple Inc,10,180.45,stock,USD
+NVDA,NVIDIA Corp,5,130.20,stock,USD
+MSFT,Microsoft Corp,3,415.00,stock,USD
