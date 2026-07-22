@@ -6,5 +6,7 @@ from app.models.models import (
     WatchlistItem,
 )
 
+from app.models.investment_thesis import InvestmentThesis
+
 from .models import *
 from .portfolio_snapshot import PortfolioSnapshot

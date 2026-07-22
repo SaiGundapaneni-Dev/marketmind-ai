@@ -2,6 +2,10 @@ import re
 
 from sqlalchemy.orm import Session
 
+from app.repositories.thesis_ai_repository import (
+    ThesisAIRepository,
+)
+
 from app.services.ipo_service import IPOService
 from app.services.news_service import NewsService
 from app.services.portfolio_intelligence_service import (
@@ -104,7 +108,26 @@ class CopilotService:
     @staticmethod
     def detect_intent(question: str) -> str:
         text = question.lower().strip()
-
+        thesis_terms = {
+            "thesis",
+            "investment thesis",
+            "why did i buy",
+            "why i bought",
+            "reason i bought",
+            "reasons i bought",
+            "buy reason",
+            "buy reasons",
+            "target price",
+            "price target",
+            "conviction",
+            "confidence",
+            "investment horizon",
+            "sell condition",
+            "sell conditions",
+            "when should i sell",
+            "what would make me sell",
+            "review date",
+        }
         ipo_terms = {
             "ipo",
             "initial public offering",
@@ -179,6 +202,9 @@ class CopilotService:
             "fundamental",
             "fundamentals",
         }
+        
+        if any(term in text for term in thesis_terms):
+            return "thesis"
 
         if any(term in text for term in ipo_terms):
             return "ipo"
@@ -1358,6 +1384,67 @@ class CopilotService:
             "snapshot: "
             + " ".join(changes)
         )
+        
+    @staticmethod
+    def build_thesis_answer(
+        symbol: str,
+        thesis,
+    ) -> str:
+        parts = [
+            (
+                f"Your investment thesis for {symbol} is: "
+                f"{thesis.thesis}"
+            )
+        ]
+
+        if thesis.buy_reasons:
+            parts.append(
+                f"Your recorded buy reasons are: "
+                f"{thesis.buy_reasons}."
+            )
+
+        if thesis.target_price is not None:
+            parts.append(
+                f"Your target price is "
+                f"${thesis.target_price:,.2f}."
+            )
+
+        if thesis.investment_horizon:
+            parts.append(
+                f"Your investment horizon is "
+                f"{thesis.investment_horizon}."
+            )
+
+        if thesis.conviction_score is not None:
+            parts.append(
+                f"Your conviction score is "
+                f"{thesis.conviction_score}/10."
+            )
+
+        if thesis.risk_level:
+            parts.append(
+                f"You classified the risk level as "
+                f"{thesis.risk_level}."
+            )
+
+        if thesis.sell_conditions:
+            parts.append(
+                f"Your sell conditions are: "
+                f"{thesis.sell_conditions}."
+            )
+
+        if thesis.review_date:
+            parts.append(
+                f"Your next review date is "
+                f"{thesis.review_date.strftime('%B %d, %Y')}."
+            )
+
+        if thesis.notes:
+            parts.append(
+                f"Additional notes: {thesis.notes}"
+            )
+
+        return " ".join(parts)
 
     @staticmethod
     def answer(
@@ -1378,6 +1465,79 @@ class CopilotService:
         intent = CopilotService.detect_intent(
             clean_question
         )
+        
+        if intent == "thesis":
+            symbol = CopilotService.extract_symbol(
+                clean_question
+            )
+
+            if not symbol:
+                return {
+                    "question": clean_question,
+                    "intent": intent,
+                    "answer": (
+                        "Please include a stock ticker or company "
+                        "name, such as AAPL, Apple, NVDA, or Nvidia."
+                    ),
+                    "status": "needs_more_info",
+                }
+
+            thesis = ThesisAIRepository.get_user_thesis(
+                db=db,
+                user_id=user_id,
+                symbol=symbol,
+            )
+
+            if thesis is None:
+                return {
+                    "question": clean_question,
+                    "intent": intent,
+                    "answer": (
+                        f"You have not created an investment thesis "
+                        f"for {symbol} yet."
+                    ),
+                    "data": {
+                        "symbol": symbol,
+                        "thesis": None,
+                    },
+                    "status": "not_found",
+                }
+
+            return {
+                "question": clean_question,
+                "intent": intent,
+                "answer": CopilotService.build_thesis_answer(
+                    symbol=symbol,
+                    thesis=thesis,
+                ),
+                "data": {
+                    "symbol": symbol,
+                    "thesis": {
+                        "id": thesis.id,
+                        "holding_id": thesis.holding_id,
+                        "thesis": thesis.thesis,
+                        "target_price": thesis.target_price,
+                        "investment_horizon": (
+                            thesis.investment_horizon
+                        ),
+                        "conviction_score": (
+                            thesis.conviction_score
+                        ),
+                        "risk_level": thesis.risk_level,
+                        "buy_reasons": thesis.buy_reasons,
+                        "sell_conditions": (
+                            thesis.sell_conditions
+                        ),
+                        "notes": thesis.notes,
+                        "review_date": (
+                            thesis.review_date.isoformat()
+                            if thesis.review_date
+                            else None
+                        ),
+                    },
+                },
+                "status": "success",
+            }
 
         if intent == "portfolio":
             portfolio_question_type = (

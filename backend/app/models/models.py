@@ -90,7 +90,13 @@ class Holding(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     portfolio = relationship("Portfolio", back_populates="holdings")
-
+    
+    investment_thesis = relationship(
+        "InvestmentThesis",
+        back_populates="holding",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
 
 class NewsSearch(Base):
     __tablename__ = "news_searches"
