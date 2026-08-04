@@ -27,6 +27,10 @@ const links = [
     label: "Portfolio Intelligence",
   },
   {
+    href: "/scenario-simulator",
+    label: "Scenario Simulator",
+  },
+  {
     href: "/stock-search",
     label: "Stock Search",
   },
