@@ -15,6 +15,9 @@ from sqlalchemy.orm import Session
 
 from app.core.auth_dependencies import get_current_user
 from app.core.database import get_db
+from app.schemas.daily_brief_schema import (
+    DailyBriefResponse,
+)
 from app.schemas.investment_context_schema import (
     InvestmentContextResponse,
 )
@@ -39,6 +42,9 @@ from app.schemas.portfolio_schema import (
 )
 from app.schemas.portfolio_score_schema import (
     PortfolioScoreResponse,
+)
+from app.services.daily_brief_service import (
+    DailyBriefService,
 )
 from app.services.investment_context_service import (
     InvestmentContextService,
@@ -440,6 +446,20 @@ def get_portfolio_score(
     current_user=Depends(get_current_user),
 ):
     return PortfolioScoreService.generate(
+        db,
+        current_user.id,
+    )
+
+
+@router.get(
+    "/daily-brief",
+    response_model=DailyBriefResponse,
+)
+def get_daily_brief(
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    return DailyBriefService.generate(
         db,
         current_user.id,
     )

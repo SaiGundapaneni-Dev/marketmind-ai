@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from app.api.investment_thesis import router as investment_thesis_router
+from app.api.investment_review import router as investment_review_router
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.auth import router as auth_router
 from app.api.copilot import router as copilot_router
@@ -41,6 +42,7 @@ app.include_router(copilot_router)
 app.include_router(portfolio_router)
 app.include_router(watchlist_router)
 app.include_router(investment_thesis_router)
+app.include_router(investment_review_router)
 
 app.add_exception_handler(Exception, global_exception_handler)
 

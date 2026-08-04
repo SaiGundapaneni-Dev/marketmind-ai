@@ -6,6 +6,9 @@ from app.repositories.thesis_ai_repository import (
     ThesisAIRepository,
 )
 
+from app.services.investment_review_service import (
+    InvestmentReviewService,
+)
 from app.services.ipo_service import IPOService
 from app.services.news_service import NewsService
 from app.services.portfolio_intelligence_service import (
@@ -108,6 +111,21 @@ class CopilotService:
     @staticmethod
     def detect_intent(question: str) -> str:
         text = question.lower().strip()
+        review_terms = {
+            "review my investment",
+            "investment review",
+            "review my stock",
+            "review this investment",
+            "analyze my thesis",
+            "analyse my thesis",
+            "continue holding",
+            "should i hold",
+            "should i continue holding",
+            "how is my investment",
+            "is my thesis on track",
+            "thesis on track",
+        }
+
         thesis_terms = {
             "thesis",
             "investment thesis",
@@ -203,6 +221,9 @@ class CopilotService:
             "fundamentals",
         }
         
+        if any(term in text for term in review_terms):
+            return "investment_review"
+
         if any(term in text for term in thesis_terms):
             return "thesis"
 
@@ -1466,6 +1487,50 @@ class CopilotService:
             clean_question
         )
         
+        if intent == "investment_review":
+            symbol = CopilotService.extract_symbol(
+                clean_question
+            )
+
+            if not symbol:
+                return {
+                    "question": clean_question,
+                    "intent": intent,
+                    "answer": (
+                        "Please include a stock ticker or company "
+                        "name, such as AAPL, Apple, NVDA, or Nvidia."
+                    ),
+                    "status": "needs_more_info",
+                }
+
+            try:
+                review = (
+                    InvestmentReviewService.review_by_symbol(
+                        db=db,
+                        user_id=user_id,
+                        symbol=symbol,
+                    )
+                )
+            except ValueError as exc:
+                return {
+                    "question": clean_question,
+                    "intent": intent,
+                    "answer": str(exc),
+                    "data": {
+                        "symbol": symbol,
+                        "review": None,
+                    },
+                    "status": "not_found",
+                }
+
+            return {
+                "question": clean_question,
+                "intent": intent,
+                "answer": review["summary"],
+                "data": review,
+                "status": "success",
+            }
+
         if intent == "thesis":
             symbol = CopilotService.extract_symbol(
                 clean_question

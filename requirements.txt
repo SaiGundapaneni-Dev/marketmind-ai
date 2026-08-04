@@ -165,3 +165,4 @@ websockets==16.0
 widgetsnbextension==4.0.14
 xgboost==3.0.2
 yfinance==1.5.1
+python-multipart

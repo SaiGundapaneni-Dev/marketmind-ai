@@ -19,6 +19,10 @@ type StoredUser = {
 const links = [
   { href: "/", label: "Dashboard" },
   {
+    href: "/daily-brief",
+    label: "Daily Brief",
+  },
+  {
     href: "/intelligence",
     label: "Portfolio Intelligence",
   },
