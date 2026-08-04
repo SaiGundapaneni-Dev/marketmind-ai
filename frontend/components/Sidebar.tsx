@@ -38,6 +38,10 @@ const links = [
     href: "/watchlist",
     label: "AI Watchlist",
   },
+  {
+    href: "/watchtower",
+    label: "AI Watchtower",
+  },
   { href: "/news", label: "News" },
   {
     href: "/ipo-analyzer",

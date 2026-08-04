@@ -12,6 +12,7 @@ from app.api.scenario_simulator import router as scenario_simulator_router
 from app.api.sec import router as sec_router
 from app.api.stocks import router as stocks_router
 from app.api.watchlist import router as watchlist_router
+from app.api.watchtower import router as watchtower_router
 from app.core.config import settings
 from app.core.exceptions import global_exception_handler
 from app.core.logger import setup_logger
@@ -45,6 +46,7 @@ app.include_router(scenario_simulator_router)
 app.include_router(copilot_router)
 app.include_router(portfolio_router)
 app.include_router(watchlist_router)
+app.include_router(watchtower_router)
 app.include_router(investment_thesis_router)
 app.include_router(investment_review_router)
 
