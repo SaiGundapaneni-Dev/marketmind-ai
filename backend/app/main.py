@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from app.api.investment_thesis import router as investment_thesis_router
 from app.api.investment_review import router as investment_review_router
 from fastapi.middleware.cors import CORSMiddleware
+from app.api.ai_coach import router as ai_coach_router
 from app.api.auth import router as auth_router
 from app.api.copilot import router as copilot_router
 from app.api.ipo import router as ipo_router
@@ -34,6 +35,7 @@ app.add_middleware(
 )
 
 app.include_router(auth_router)
+app.include_router(ai_coach_router)
 app.include_router(news_router)
 app.include_router(stocks_router)
 app.include_router(ipo_router)

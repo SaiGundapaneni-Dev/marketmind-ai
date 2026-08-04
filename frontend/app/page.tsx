@@ -11,6 +11,7 @@ import PortfolioTimeline from "@/components/PortfolioTimeline";
 import PortfolioScoreHero from "@/components/PortfolioScoreHero";
 import TodayIntelligence from "@/components/TodayIntelligence";
 import ActionMemo from "@/components/ActionMemo";
+import AIPortfolioCoach from "@/components/AIPortfolioCoach";
 import type { PortfolioScoreResponse } from "@/types/portfolio-score";
 
 type PortfolioSummary = {
@@ -263,8 +264,11 @@ export default function Home() {
             </p>
           </header>
 
-          {portfolioScore ? (
-            <PortfolioScoreHero score={portfolioScore} />
+          <AIPortfolioCoach />
+
+          <div className="mt-6">
+            {portfolioScore ? (
+              <PortfolioScoreHero score={portfolioScore} />
           ) : (
             <section className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-6">
               <p className="font-semibold text-amber-200">
@@ -274,7 +278,8 @@ export default function Home() {
                 Today&apos;s intelligence and portfolio data remain available.
               </p>
             </section>
-          )}
+            )}
+          </div>
 
           <section className="mt-6 grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
             <TodayIntelligence intelligence={intelligence} />
