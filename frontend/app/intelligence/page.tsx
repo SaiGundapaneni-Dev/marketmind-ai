@@ -96,7 +96,11 @@ export default function IntelligencePage() {
   const [error, setError] = useState("");
 
   const loadIntelligence = useCallback(async (refresh = false) => {
-    refresh ? setRefreshing(true) : setLoading(true);
+    if (refresh) {
+	  setRefreshing(true);
+	} else {
+	  setLoading(true);
+	}
     setError("");
 
     try {
@@ -135,9 +139,13 @@ export default function IntelligencePage() {
     }
   }, []);
 
-  useEffect(() => {
-    void loadIntelligence();
-  }, [loadIntelligence]);
+	useEffect(() => {
+	  const timer = setTimeout(() => {
+		void loadIntelligence();
+	  }, 0);
+
+	  return () => clearTimeout(timer);
+	}, [loadIntelligence]);
 
   const primaryInsight = useMemo(
     () => data?.priority_insights?.[0],

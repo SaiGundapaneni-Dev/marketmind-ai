@@ -2,7 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
 
 import LogoutButton from "@/components/LogoutButton";
 
@@ -15,38 +18,78 @@ type StoredUser = {
 
 const links = [
   { href: "/", label: "Dashboard" },
-  { href: "/intelligence", label: "Portfolio Intelligence" },
-  { href: "/stock-search", label: "Stock Search" },
-  { href: "/watchlist", label: "AI Watchlist" },
+  {
+    href: "/intelligence",
+    label: "Portfolio Intelligence",
+  },
+  {
+    href: "/stock-search",
+    label: "Stock Search",
+  },
+  {
+    href: "/watchlist",
+    label: "AI Watchlist",
+  },
   { href: "/news", label: "News" },
-  { href: "/ipo-analyzer", label: "IPO Analyzer" },
-  { href: "/copilot", label: "AI Copilot" },
+  {
+    href: "/ipo-analyzer",
+    label: "IPO Analyzer",
+  },
+  {
+    href: "/copilot",
+    label: "AI Copilot",
+  },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const [user, setUser] = useState<StoredUser | null>(null);
+
+  const [mounted, setMounted] =
+    useState(false);
+
+  const [user, setUser] =
+    useState<StoredUser | null>(null);
 
   useEffect(() => {
-    try {
-      const storedUser = window.localStorage.getItem("vestora_user");
+    setMounted(true);
 
-      if (!storedUser) {
+    try {
+      const stored =
+        localStorage.getItem("vestora_user");
+
+      if (!stored) {
+        setUser(null);
         return;
       }
 
-      const parsedUser = JSON.parse(storedUser) as StoredUser;
+      const parsedUser =
+        JSON.parse(stored) as StoredUser;
+
       setUser(parsedUser);
-    } catch (error) {
-      console.error("Unable to read stored user:", error);
-      window.localStorage.removeItem("vestora_user");
+    } catch {
+      setUser(null);
     }
   }, []);
+
+  if (!mounted) {
+    return (
+      <aside className="sticky top-0 flex h-screen w-64 shrink-0 flex-col border-r border-slate-800 bg-slate-950 p-6 text-white">
+        <div className="flex h-full items-center justify-center">
+          <p className="text-sm text-slate-500">
+            Loading...
+          </p>
+        </div>
+      </aside>
+    );
+  }
 
   return (
     <aside className="sticky top-0 flex h-screen w-64 shrink-0 flex-col border-r border-slate-800 bg-slate-950 p-6 text-white">
       <div>
-        <h1 className="text-xl font-bold">Vestora AI</h1>
+        <h1 className="text-xl font-bold">
+          Vestora AI
+        </h1>
+
         <p className="mt-1 text-xs text-slate-500">
           Investment Intelligence
         </p>
@@ -57,7 +100,9 @@ export default function Sidebar() {
           const isActive =
             link.href === "/"
               ? pathname === "/"
-              : pathname.startsWith(link.href);
+              : pathname.startsWith(
+                  link.href
+                );
 
           return (
             <Link
@@ -81,6 +126,7 @@ export default function Sidebar() {
             <p className="truncate text-sm font-semibold text-white">
               {user.name}
             </p>
+
             <p className="mt-1 truncate text-xs text-slate-400">
               {user.email}
             </p>
