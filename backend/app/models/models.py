@@ -61,6 +61,12 @@ class User(Base):
         cascade="all, delete-orphan",
     )
 
+    investment_goals = relationship(
+        "InvestmentGoal",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
 class Portfolio(Base):
     __tablename__ = "portfolios"
 

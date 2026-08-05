@@ -23,6 +23,10 @@ const links = [
     label: "Daily Brief",
   },
   {
+    href: "/goals",
+    label: "Investment Goals",
+  },
+  {
     href: "/intelligence",
     label: "Portfolio Intelligence",
   },
@@ -37,10 +41,6 @@ const links = [
   {
     href: "/watchlist",
     label: "AI Watchlist",
-  },
-  {
-    href: "/watchtower",
-    label: "AI Watchtower",
   },
   { href: "/news", label: "News" },
   {

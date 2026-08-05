@@ -4,6 +4,8 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 
 from app.models.portfolio_snapshot import PortfolioSnapshot
+from app.models.investment_goal import InvestmentGoal
+from app.models.investment_thesis import InvestmentThesis
 
 from app.core.database import Base
 from app.models.models import Holding, NewsSearch, Portfolio, User, WatchlistItem

@@ -327,6 +327,8 @@ export default function Home() {
             />
           </section>
 
+          <PortfolioTimeline />
+
           <section className="mt-8 grid gap-6 xl:grid-cols-[1fr_0.9fr]">
             <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-400">
@@ -372,8 +374,6 @@ export default function Home() {
               </div>
             </div>
           </section>
-
-          <PortfolioTimeline />
 
           <section className="mt-8">
             <div className="mb-4">
