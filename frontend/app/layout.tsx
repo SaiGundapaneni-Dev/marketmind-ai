@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
-import AuthGuard from "@/components/AuthGuard";
 import { Geist, Geist_Mono } from "next/font/google";
+
+import AuthGuard from "@/components/AuthGuard";
+
 import "./globals.css";
 
 const geistSans = Geist({
@@ -14,9 +16,20 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Vestora AI",
+  title: {
+    default: "Vestora AI — Investing clarity without the noise",
+    template: "%s | Vestora AI",
+  },
   description:
-    "AI-powered portfolio intelligence, stock research, watchlists and investment insights.",
+    "Vestora AI is an intelligent investing copilot that monitors your portfolio, filters market noise and explains what deserves your attention.",
+  applicationName: "Vestora AI",
+  keywords: [
+    "portfolio intelligence",
+    "AI investing copilot",
+    "investment portfolio",
+    "portfolio monitoring",
+    "investment thesis",
+  ],
 };
 
 export default function RootLayout({
@@ -30,8 +43,8 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-		<AuthGuard>{children}</AuthGuard>
-	  </body>
+        <AuthGuard>{children}</AuthGuard>
+      </body>
     </html>
   );
 }

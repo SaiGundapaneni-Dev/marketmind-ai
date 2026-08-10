@@ -1,0 +1,1 @@
+Replace the two migration files, then rerun `alembic upgrade head` against the empty Neon database.
