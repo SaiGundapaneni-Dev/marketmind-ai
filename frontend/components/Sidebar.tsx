@@ -32,14 +32,13 @@ const moreLinks = [
 
 export default function Sidebar() {
   const pathname = usePathname();
-
   const [mounted, setMounted] = useState(false);
   const [user, setUser] = useState<StoredUser | null>(null);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-
     try {
       const stored = localStorage.getItem("vestora_user");
       setUser(stored ? (JSON.parse(stored) as StoredUser) : null);
@@ -52,107 +51,131 @@ export default function Sidebar() {
     if (moreLinks.some((link) => pathname.startsWith(link.href))) {
       setMoreOpen(true);
     }
+    setMobileOpen(false);
   }, [pathname]);
 
-  if (!mounted) {
-    return (
-      <aside className="sticky top-0 hidden h-screen w-72 shrink-0 border-r border-white/10 bg-[#020817] p-6 text-white md:flex md:flex-col">
-        <div className="flex h-full items-center justify-center">
-          <p className="text-sm text-slate-500">Loading...</p>
-        </div>
-      </aside>
-    );
-  }
+  if (!mounted) return null;
 
   return (
-    <aside className="sticky top-0 hidden h-screen w-72 shrink-0 border-r border-white/10 bg-[#020817] p-6 text-white md:flex md:flex-col">
-      <div className="flex items-center gap-3">
-        <div className="relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#0F172A]">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#3B82F6]/20 to-[#10B981]/20" />
-          <span className="relative text-2xl font-black tracking-tighter">
-            V
-          </span>
-        </div>
+    <>
+      <aside className="sticky top-0 hidden h-screen w-72 shrink-0 flex-col border-r border-white/10 bg-[#020817] p-6 text-white md:flex">
+        <Brand />
+        <Nav pathname={pathname} moreOpen={moreOpen} setMoreOpen={setMoreOpen} />
+        <Account user={user} />
+      </aside>
 
-        <div>
-          <h1 className="text-lg font-semibold tracking-[0.12em]">
-            VESTORA
-            <span className="ml-1 text-[#10B981]">AI</span>
-          </h1>
-
-          <p className="mt-1 text-[11px] uppercase tracking-[0.18em] text-slate-500">
-            Intelligent Investing Copilot
-          </p>
-        </div>
+      <div className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-white/10 bg-[#020817]/95 px-4 backdrop-blur md:hidden">
+        <Brand compact />
+        <button
+          type="button"
+          onClick={() => setMobileOpen(true)}
+          className="rounded-xl border border-white/10 px-3 py-2 text-sm text-slate-300"
+        >
+          Menu
+        </button>
       </div>
 
-      <nav className="mt-10 flex-1 overflow-y-auto">
-        <div className="space-y-2">
-          {primaryLinks.map((link) => (
-            <SidebarLink
-              key={link.href}
-              href={link.href}
-              label={link.label}
-              icon={link.icon}
-              pathname={pathname}
-            />
-          ))}
-        </div>
-
-        <div className="mt-8 border-t border-white/10 pt-6">
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
           <button
             type="button"
-            onClick={() => setMoreOpen((value) => !value)}
-            className="flex w-full items-center justify-between rounded-xl px-4 py-3 text-left text-sm text-slate-400 transition hover:bg-white/5 hover:text-white"
-          >
-            <span>More</span>
-            <span className="text-base">{moreOpen ? "−" : "+"}</span>
-          </button>
+            aria-label="Close navigation"
+            onClick={() => setMobileOpen(false)}
+            className="absolute inset-0 bg-black/70"
+          />
 
-          {moreOpen && (
-            <div className="mt-2 space-y-1 pl-3">
-              {moreLinks.map((link) => (
-                <SidebarLink
-                  key={link.href}
-                  href={link.href}
-                  label={link.label}
-                  pathname={pathname}
-                  compact
-                />
-              ))}
+          <aside className="absolute right-0 top-0 flex h-full w-[86%] max-w-sm flex-col border-l border-white/10 bg-[#020817] p-6 text-white shadow-2xl">
+            <div className="flex items-center justify-between">
+              <Brand />
+              <button
+                type="button"
+                onClick={() => setMobileOpen(false)}
+                className="rounded-xl border border-white/10 px-3 py-2 text-sm text-slate-400"
+              >
+                Close
+              </button>
             </div>
-          )}
+
+            <Nav pathname={pathname} moreOpen={moreOpen} setMoreOpen={setMoreOpen} />
+            <Account user={user} />
+          </aside>
         </div>
-      </nav>
-
-      <div className="mt-6 border-t border-white/10 pt-5">
-        {user && (
-          <div className="mb-4 rounded-2xl border border-white/10 bg-[#0F172A] p-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#3B82F6] to-[#10B981] text-sm font-bold">
-                {user.name?.charAt(0)?.toUpperCase() || "U"}
-              </div>
-
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-white">
-                  {user.name}
-                </p>
-
-                <p className="mt-1 truncate text-xs text-slate-500">
-                  {user.email}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <LogoutButton />
-      </div>
-    </aside>
+      )}
+    </>
   );
 }
 
-function SidebarLink({
+function Brand({ compact = false }: { compact?: boolean }) {
+  return (
+    <Link href="/dashboard" className="flex items-center gap-3">
+      <div
+        className={`flex items-center justify-center rounded-xl border border-white/10 bg-gradient-to-br from-[#3B82F6]/20 to-[#10B981]/20 font-black ${
+          compact ? "h-9 w-9" : "h-11 w-11"
+        }`}
+      >
+        V
+      </div>
+
+      <div>
+        <p className="text-sm font-semibold tracking-[0.12em]">
+          VESTORA <span className="text-[#10B981]">AI</span>
+        </p>
+        {!compact && (
+          <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-slate-600">
+            Investing Copilot
+          </p>
+        )}
+      </div>
+    </Link>
+  );
+}
+
+function Nav({
+  pathname,
+  moreOpen,
+  setMoreOpen,
+}: {
+  pathname: string;
+  moreOpen: boolean;
+  setMoreOpen: (value: boolean) => void;
+}) {
+  return (
+    <nav className="mt-9 flex-1 overflow-y-auto">
+      <div className="space-y-2">
+        {primaryLinks.map((link) => (
+          <NavLink key={link.href} {...link} pathname={pathname} />
+        ))}
+      </div>
+
+      <div className="mt-7 border-t border-white/10 pt-5">
+        <button
+          type="button"
+          onClick={() => setMoreOpen(!moreOpen)}
+          className="flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm text-slate-400 hover:bg-white/5 hover:text-white"
+        >
+          <span>More</span>
+          <span>{moreOpen ? "−" : "+"}</span>
+        </button>
+
+        {moreOpen && (
+          <div className="mt-2 space-y-1 pl-2">
+            {moreLinks.map((link) => (
+              <NavLink
+                key={link.href}
+                href={link.href}
+                label={link.label}
+                pathname={pathname}
+                compact
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </nav>
+  );
+}
+
+function NavLink({
   href,
   label,
   pathname,
@@ -165,15 +188,15 @@ function SidebarLink({
   icon?: string;
   compact?: boolean;
 }) {
-  const isActive = pathname.startsWith(href);
+  const active = pathname.startsWith(href);
 
   return (
     <Link
       href={href}
-      className={`group flex items-center gap-3 rounded-xl transition ${
+      className={`flex items-center gap-3 rounded-xl transition ${
         compact ? "px-4 py-2.5 text-xs" : "px-4 py-3 text-sm"
       } ${
-        isActive
+        active
           ? "bg-[#3B82F6]/15 text-white"
           : "text-slate-400 hover:bg-white/5 hover:text-white"
       }`}
@@ -181,16 +204,35 @@ function SidebarLink({
       {icon && (
         <span
           className={`flex h-8 w-8 items-center justify-center rounded-lg ${
-            isActive
-              ? "bg-[#3B82F6] text-white"
-              : "bg-white/5 text-slate-500 group-hover:text-white"
+            active ? "bg-[#3B82F6]" : "bg-white/5"
           }`}
         >
           {icon}
         </span>
       )}
-
       <span className="font-medium">{label}</span>
     </Link>
+  );
+}
+
+function Account({ user }: { user: StoredUser | null }) {
+  return (
+    <div className="mt-5 border-t border-white/10 pt-5">
+      {user && (
+        <div className="mb-3 rounded-2xl border border-white/10 bg-[#0F172A] p-4">
+          <p className="truncate text-sm font-semibold">{user.name}</p>
+          <p className="mt-1 truncate text-xs text-slate-500">{user.email}</p>
+        </div>
+      )}
+
+      <Link
+        href="/settings"
+        className="mb-2 block rounded-xl px-4 py-2.5 text-sm text-slate-400 hover:bg-white/5 hover:text-white"
+      >
+        Account settings
+      </Link>
+
+      <LogoutButton />
+    </div>
   );
 }

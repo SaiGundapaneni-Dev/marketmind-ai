@@ -294,15 +294,42 @@ export default function LandingPage() {
       </section>
 
       <footer className="border-t border-white/10">
-        <div className="mx-auto flex max-w-7xl flex-col gap-5 px-5 py-8 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between lg:px-8">
-          <div className="flex items-center gap-3">
-            <BrandMark small />
-            <span>Vestora AI</span>
+        <div className="mx-auto max-w-7xl px-5 py-8 lg:px-8">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <BrandMark small />
+              <span className="text-sm text-slate-500">Vestora AI</span>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm">
+              <Link
+                href="/privacy"
+                className="text-slate-500 transition hover:text-white"
+              >
+                Privacy Policy
+              </Link>
+
+              <Link
+                href="/terms"
+                className="text-slate-500 transition hover:text-white"
+              >
+                Terms of Service
+              </Link>
+
+              <Link
+                href="/login"
+                className="text-slate-500 transition hover:text-white"
+              >
+                Sign in
+              </Link>
+            </div>
           </div>
 
-          <p>
-            Informational portfolio intelligence. Not personalized financial advice.
-          </p>
+          <div className="mt-6 border-t border-white/5 pt-6">
+            <p className="text-xs leading-5 text-slate-600">
+              Informational portfolio intelligence. Not personalized financial advice.
+            </p>
+          </div>
         </div>
       </footer>
     </main>

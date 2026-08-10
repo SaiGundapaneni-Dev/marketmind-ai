@@ -1,1 +1,1 @@
-Replace the two migration files, then rerun `alembic upgrade head` against the empty Neon database.
+Replace frontend/app/page.tsx, then run npm run build.

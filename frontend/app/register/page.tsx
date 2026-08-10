@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { FormEvent, useState } from "react";
 
-import { getToken, saveToken } from "@/lib/auth";
+import { saveToken } from "@/lib/auth";
 
 type RegisterResponse = {
   access_token: string;
@@ -19,43 +19,22 @@ type RegisterResponse = {
 
 export default function RegisterPage() {
   const router = useRouter();
-
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] =
-    useState("");
-  const [confirmPassword, setConfirmPassword] =
-    useState("");
-
-  const [loading, setLoading] =
-    useState(false);
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [show, setShow] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const apiBaseUrl =
-    process.env.NEXT_PUBLIC_API_BASE_URL ??
-    "http://127.0.0.1:8000";
+    process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8000";
 
-  useEffect(() => {
-    if (getToken()) {
-      router.replace("/");
-    }
-  }, [router]);
-
-  async function handleSubmit(
-    event: React.FormEvent<HTMLFormElement>
-  ) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-
     setError("");
 
-    if (password.length < 8) {
-      setError(
-        "Password must contain at least 8 characters."
-      );
-      return;
-    }
-
-    if (password !== confirmPassword) {
+    if (password !== confirm) {
       setError("Passwords do not match.");
       return;
     }
@@ -63,23 +42,15 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const response = await fetch(
-        `${apiBaseUrl}/auth/register`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-          body: JSON.stringify({
-            name: name.trim(),
-            email: email
-              .trim()
-              .toLowerCase(),
-            password,
-          }),
-        }
-      );
+      const response = await fetch(`${apiBaseUrl}/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name.trim(),
+          email: email.trim().toLowerCase(),
+          password,
+        }),
+      });
 
       const data = await response.json();
 
@@ -87,182 +58,128 @@ export default function RegisterPage() {
         setError(
           typeof data.detail === "string"
             ? data.detail
-            : "Unable to create your account."
+            : "Unable to create account."
         );
         return;
       }
 
-      const registerData =
-        data as RegisterResponse;
-
-      saveToken(registerData.access_token);
+      const result = data as RegisterResponse;
+      saveToken(result.access_token);
 
       window.localStorage.setItem(
         "vestora_user",
-        JSON.stringify(
-          registerData.user
-        )
+        JSON.stringify(result.user)
       );
 
-      router.replace("/");
+      router.replace("/dashboard");
       router.refresh();
     } catch (requestError) {
-      console.error(
-        "Registration error:",
-        requestError
-      );
-
-      setError(
-        "Unable to connect to Vestora AI. Make sure the backend is running."
-      );
+      console.error("Register error:", requestError);
+      setError("Unable to connect to Vestora AI.");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-950 px-5 py-10 text-white">
-      <section className="w-full max-w-md rounded-3xl border border-slate-800 bg-slate-900 p-8 shadow-2xl">
-        <div className="text-center">
-          <p className="text-sm font-semibold text-blue-400">
-            Vestora AI
-          </p>
+    <main className="flex min-h-screen items-center justify-center bg-[#020817] px-5 py-12 text-white">
+      <section className="w-full max-w-md rounded-[28px] border border-white/10 bg-[#0F172A] p-8">
+        <Link href="/" className="mx-auto block w-fit font-semibold tracking-[0.14em]">
+          VESTORA <span className="text-[#10B981]">AI</span>
+        </Link>
 
-          <h1 className="mt-2 text-3xl font-bold">
-            Create your account
+        <div className="mt-8 text-center">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#10B981]">
+            Get started
+          </p>
+          <h1 className="mt-3 text-3xl font-semibold">
+            Create your Vestora account
           </h1>
-
-          <p className="mt-2 text-sm text-slate-400">
-            Build your private portfolio and
-            unlock personalized investment
-            intelligence.
-          </p>
         </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="mt-8 space-y-5"
-        >
-          <div>
-            <label
-              htmlFor="name"
-              className="text-sm font-medium text-slate-300"
-            >
-              Full name
-            </label>
+        <form onSubmit={submit} className="mt-8 space-y-5">
+          <Field label="Full name" type="text" value={name} onChange={setName} />
+          <Field label="Email address" type="email" value={email} onChange={setEmail} />
+          <Field
+            label="Password"
+            type={show ? "text" : "password"}
+            value={password}
+            onChange={setPassword}
+            minLength={8}
+          />
+          <Field
+            label="Confirm password"
+            type={show ? "text" : "password"}
+            value={confirm}
+            onChange={setConfirm}
+            minLength={8}
+          />
 
+          <label className="flex items-center gap-2 text-sm text-slate-500">
             <input
-              id="name"
-              type="text"
-              autoComplete="name"
-              required
-              minLength={2}
-              value={name}
-              onChange={(event) =>
-                setName(event.target.value)
-              }
-              placeholder="Your name"
-              className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 outline-none transition focus:border-blue-500"
+              type="checkbox"
+              checked={show}
+              onChange={(e) => setShow(e.target.checked)}
             />
-          </div>
-
-          <div>
-            <label
-              htmlFor="email"
-              className="text-sm font-medium text-slate-300"
-            >
-              Email address
-            </label>
-
-            <input
-              id="email"
-              type="email"
-              autoComplete="email"
-              required
-              value={email}
-              onChange={(event) =>
-                setEmail(event.target.value)
-              }
-              placeholder="you@example.com"
-              className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 outline-none transition focus:border-blue-500"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="password"
-              className="text-sm font-medium text-slate-300"
-            >
-              Password
-            </label>
-
-            <input
-              id="password"
-              type="password"
-              autoComplete="new-password"
-              required
-              minLength={8}
-              value={password}
-              onChange={(event) =>
-                setPassword(event.target.value)
-              }
-              placeholder="Minimum 8 characters"
-              className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 outline-none transition focus:border-blue-500"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="confirm-password"
-              className="text-sm font-medium text-slate-300"
-            >
-              Confirm password
-            </label>
-
-            <input
-              id="confirm-password"
-              type="password"
-              autoComplete="new-password"
-              required
-              minLength={8}
-              value={confirmPassword}
-              onChange={(event) =>
-                setConfirmPassword(
-                  event.target.value
-                )
-              }
-              placeholder="Repeat your password"
-              className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 outline-none transition focus:border-blue-500"
-            />
-          </div>
+            Show passwords
+          </label>
 
           {error && (
-            <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-300">
+            <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-200">
               {error}
             </div>
           )}
 
           <button
-            type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-blue-600 px-5 py-3 font-semibold transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full rounded-xl bg-[#3B82F6] px-5 py-3.5 font-semibold hover:bg-blue-500 disabled:opacity-50"
           >
-            {loading
-              ? "Creating account..."
-              : "Create account"}
+            {loading ? "Creating account..." : "Create account"}
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-slate-400">
+        <p className="mt-7 text-center text-sm text-slate-400">
           Already have an account?{" "}
-          <Link
-            href="/login"
-            className="font-medium text-blue-400 hover:text-blue-300"
-          >
-            Log in
+          <Link href="/login" className="font-semibold text-[#3B82F6]">
+            Sign in
           </Link>
+        </p>
+
+        <p className="mt-5 text-center text-xs leading-5 text-slate-600">
+          By creating an account, you agree to our{" "}
+          <Link href="/terms" className="underline">Terms</Link>{" "}
+          and{" "}
+          <Link href="/privacy" className="underline">Privacy Policy</Link>.
         </p>
       </section>
     </main>
+  );
+}
+
+function Field({
+  label,
+  type,
+  value,
+  onChange,
+  minLength,
+}: {
+  label: string;
+  type: string;
+  value: string;
+  onChange: (value: string) => void;
+  minLength?: number;
+}) {
+  return (
+    <label className="block">
+      <span className="text-sm text-slate-300">{label}</span>
+      <input
+        type={type}
+        required
+        minLength={minLength}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="mt-2 w-full rounded-xl border border-white/10 bg-[#020817] px-4 py-3 outline-none focus:border-[#3B82F6]/70"
+      />
+    </label>
   );
 }
