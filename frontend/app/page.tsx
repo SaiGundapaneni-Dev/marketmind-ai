@@ -304,21 +304,21 @@ export default function LandingPage() {
             <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm">
               <Link
                 href="/privacy"
-                className="text-slate-500 transition hover:text-white"
+                className="font-medium text-slate-300 transition hover:text-white"
               >
                 Privacy Policy
               </Link>
 
               <Link
                 href="/terms"
-                className="text-slate-500 transition hover:text-white"
+                className="font-medium text-slate-300 transition hover:text-white"
               >
                 Terms of Service
               </Link>
 
               <Link
                 href="/login"
-                className="text-slate-500 transition hover:text-white"
+                className="font-medium text-slate-300 transition hover:text-white"
               >
                 Sign in
               </Link>

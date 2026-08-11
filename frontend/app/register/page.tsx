@@ -145,12 +145,25 @@ export default function RegisterPage() {
           </Link>
         </p>
 
-        <p className="mt-5 text-center text-xs leading-5 text-slate-600">
-          By creating an account, you agree to our{" "}
-          <Link href="/terms" className="underline">Terms</Link>{" "}
-          and{" "}
-          <Link href="/privacy" className="underline">Privacy Policy</Link>.
-        </p>
+        <div className="mt-6 border-t border-white/10 pt-5 text-center">
+          <p className="text-xs leading-5 text-slate-400">
+            By creating an account, you agree to our{" "}
+            <Link
+              href="/terms"
+              className="font-medium text-slate-300 underline underline-offset-4 transition hover:text-white"
+            >
+              Terms of Service
+            </Link>{" "}
+            and{" "}
+            <Link
+              href="/privacy"
+              className="font-medium text-slate-300 underline underline-offset-4 transition hover:text-white"
+            >
+              Privacy Policy
+            </Link>
+            .
+          </p>
+        </div>
       </section>
     </main>
   );
